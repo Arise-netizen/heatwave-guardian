@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Scientific Methodology & Pipeline — HeatWave Guardian{% endblock %}
+
+{% block content %}
+<div class="space-y-10 max-w-5xl mx-auto">
+
+  <!-- Header Banner -->
+  <div>
+    <div class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[#a43700] font-bold mb-1">
+      <span>Scientific Architecture</span>
+      <span>•</span>
+      <span>Biometeorological Transparency</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+      Methodology & Algorithmic Pipeline
+    </h1>
+    <p class="text-base text-slate-600 mt-2 leading-relaxed">
+      HeatWave Guardian operates on a single, transparent biometeorological pipeline that rejects arbitrary
+      black-box scoring in favor of peer-reviewed thermodynamics, regional meteorological criteria, and established
+      occupational health standards.
+    </p>
+  </div>
+
+  <!-- Interactive Pipeline Visualization Flow -->
+  <div class="card p-8 bg-white border border-slate-200 shadow-sm space-y-6">
+    <h2 class="text-base font-bold uppercase tracking-wider text-slate-800">
+      The HeatWave Guardian Pipeline (Single Source of Truth)
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-3 text-center">
+      
+      <!-- Step 1 -->
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 flex flex-col justify-between">
+        <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-mono text-xs font-bold mx-auto flex items-center justify-center">1</span>
+        <div>
+          <div class="font-extrabold text-slate-900 text-xs">Live Weather</div>
+          <p class="text-[11px] text-slate-500 mt-1">Temp, Relative Humidity, 10m Wind, Solar Radiation</p>
+        </div>
+        <span class="text-[9px] font-bold text-slate-400 uppercase">Open-Meteo API</span>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="p-3.5 rounded-xl bg-orange-50 border border-orange-200 space-y-1.5 flex flex-col justify-between">
+        <span class="w-6 h-6 rounded-full bg-[#a43700] text-white font-mono text-xs font-bold mx-auto flex items-center justify-center">2</span>
+        <div>
+          <div class="font-extrabold text-[#a43700] text-xs">Liljegren WBGT</div>
+          <p class="text-[11px] text-slate-600 mt-1">Solves psychrometric & black-globe energy balances</p>
+        </div>
+        <span class="text-[9px] font-bold text-orange-700 uppercase">Liljegren (2008)</span>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5 flex flex-col justify-between">
+        <span class="w-6 h-6 rounded-full bg-amber-600 text-white font-mono text-xs font-bold mx-auto flex items-center justify-center">3</span>
+        <div>
+          <div class="font-extrabold text-amber-900 text-xs">IMD Criteria</div>
+          <p class="text-[11px] text-slate-600 mt-1">Plains 40°C, Coastal 37°C, Hilly 30°C Departures</p>
+        </div>
+        <span class="text-[9px] font-bold text-amber-700 uppercase">IMD Standard</span>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 flex flex-col justify-between">
+        <span class="w-6 h-6 rounded-full bg-slate-900 text-white font-mono text-xs font-bold mx-auto flex items-center justify-center">4</span>
+        <div>
+          <div class="font-extrabold text-slate-900 text-xs">Risk Fusion</div>
+          <p class="text-[11px] text-slate-600 mt-1">20-cell discrete matrix avoids double-counting</p>
+        </div>
+        <span class="text-[9px] font-bold text-slate-400 uppercase">Lookup Table</span>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 space-y-1.5 flex flex-col justify-between">
+        <span class="w-6 h-6 rounded-full bg-blue-700 text-white font-mono text-xs font-bold mx-auto flex items-center justify-center">5</span>
+        <div>
+          <div class="font-extrabold text-blue-900 text-xs">Personal Factors</div>
+          <p class="text-[11px] text-slate-600 mt-1">Age group, heat adaptation, workload, and PPE</p>
+        </div>
+        <span class="text-[9px] font-bold text-blue-700 uppercase">Physiological</span>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5 flex flex-col justify-between">
+        <span class="w-6 h-6 rounded-full bg-emerald-700 text-white font-mono text-xs font-bold mx-auto flex items-center justify-center">6</span>
+        <div>
+          <div class="font-extrabold text-emerald-900 text-xs">Action Guidance</div>
+          <p class="text-[11px] text-slate-600 mt-1">Hourly work/rest splits & hydration instructions</p>
+        </div>
+        <span class="text-[9px] font-bold text-emerald-700 uppercase">ISO 7243 Standard</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Deep Dive Sections -->
+  <div class="space-y-8">
+    
+    <!-- 1. The Core Thermal Stress Index & WBGT -->
+    <div class="card p-6 sm:p-8 bg-white border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#a43700]">Core Biometeorological Metric</span>
+          <h3 class="text-xl font-bold text-slate-900">1. The Core Thermal Stress Index (Liljegren WBGT)</h3>
+        </div>
+        <span class="px-2.5 py-1 rounded text-xs font-bold bg-[#fff5f0] text-[#a43700] border border-[#f0ded6]">
+          ISO 7243 Standard
+        </span>
+      </div>
+
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Traditional weather reports emphasize ambient dry-bulb temperature ($T_a$). However, human thermoregulation
+        relies predominantly on the evaporative cooling of sweat. When relative humidity is elevated or direct sunlight is intense,
+        sweat cannot evaporate effectively, causing core body temperatures to rise dangerously even at seemingly moderate ambient temperatures (e.g., 34°C with 80% RH).
+      </p>
+
+      <p class="text-sm text-slate-600 leading-relaxed">
+        The <strong>Thermal Stress Index</strong> is directly derived from the outdoor <strong>Wet-Bulb Globe Temperature (WBGT)</strong>,
+        which incorporates all four environmental determinants of human thermal load:
+      </p>
+
+      <div class="p-4 rounded-xl bg-slate-50 font-mono text-xs text-slate-800 border border-slate-200">
+        $$\text{WBGT}_{\text{outdoor}} = 0.7 \times T_{\text{nwb}} + 0.2 \times T_g + 0.1 \times T_a$$
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600">
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <strong class="text-slate-900 block mb-0.5">Natural Wet-Bulb ($T_{\text{nwb}}$)</strong>
+          <span>Measures maximum evaporative potential via Stull (2011) psychrometric regression.</span>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <strong class="text-slate-900 block mb-0.5">Black Globe Temp ($T_g$)</strong>
+          <span>Measures radiative solar loading & wind cooling via Liljegren et al. (2008) energy balance.</span>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <strong class="text-slate-900 block mb-0.5">Ambient Air Temp ($T_a$)</strong>
+          <span>Standard dry-bulb shade temperature measured at 2 meters.</span>
+        </div>
+      </div>
+
+      <!-- Thermal Stress Severity Bands Table -->
+      <div class="pt-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-2">Authoritative Thermal Stress Index Severity Bands</span>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 font-bold">
+                <th class="py-2 px-3 border-b border-slate-200">WBGT Range (°C)</th>
+                <th class="py-2 px-3 border-b border-slate-200">WBGT Band</th>
+                <th class="py-2 px-3 border-b border-slate-200">Thermal Stress Level</th>
+                <th class="py-2 px-3 border-b border-slate-200">Physiological Interpretation</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-600">
+              <tr>
+                <td class="py-2 px-3 font-mono font-bold text-emerald-700">&lt; 27.0 °C</td>
+                <td class="py-2 px-3 font-semibold">Safe</td>
+                <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase badge-low">Low</span></td>
+                <td class="py-2 px-3">Minimal environmental heat stress; safe for standard outdoor activities.</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 font-mono font-bold text-amber-700">27.0 – 29.3 °C</td>
+                <td class="py-2 px-3 font-semibold">Caution</td>
+                <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase badge-moderate">Moderate</span></td>
+                <td class="py-2 px-3">Moderate heat stress; fatigue possible with prolonged physical exertion.</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 font-mono font-bold text-orange-700">29.4 – 31.0 °C</td>
+                <td class="py-2 px-3 font-semibold">Extreme Caution</td>
+                <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase badge-high">High</span></td>
+                <td class="py-2 px-3">High environmental heat stress; increased risk of heat cramps and exhaustion.</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 font-mono font-bold text-red-700">31.1 – 32.1 °C</td>
+                <td class="py-2 px-3 font-semibold">Danger</td>
+                <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase badge-very-high">Very High</span></td>
+                <td class="py-2 px-3">Very high heat stress; heat exhaustion likely, protective rotations required.</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 font-mono font-bold text-red-950">&ge; 32.2 °C</td>
+                <td class="py-2 px-3 font-semibold">Extreme Danger</td>
+                <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase badge-extreme">Extreme</span></td>
+                <td class="py-2 px-3">Extreme environmental heat stress; critical heat stroke danger, immediate mitigation.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Why IMD Regional Thresholds? -->
+    <div class="card p-6 sm:p-8 bg-white border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xl font-bold text-slate-900">2. Why IMD Regional Criteria?</h3>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        India's geographic diversity makes a single national temperature threshold medically ineffective. A temperature of
+        38°C is normal in the Thar Desert (Rajasthan), but would be catastrophic in Shimla (Himachal Pradesh).
+      </p>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        The India Meteorological Department (IMD) defines heatwave departure criteria across three distinct geographic domains:
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-900 block mb-1">Plains Region (&ge; 40.0 °C)</span>
+          <span class="text-slate-600">Heat Day: 40.0–41.9 °C<br>Heatwave: 42.0–43.9 °C<br>Severe Heatwave: &ge; 44.0 °C</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-900 block mb-1">Coastal Region (&ge; 37.0 °C)</span>
+          <span class="text-slate-600">Heat Day: 37.0–38.9 °C<br>Heatwave: 39.0–40.9 °C<br>Severe Heatwave: &ge; 41.0 °C</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-900 block mb-1">Hilly Region (&ge; 30.0 °C)</span>
+          <span class="text-slate-600">Heat Day: 30.0–31.9 °C<br>Heatwave: 32.0–33.9 °C<br>Severe Heatwave: &ge; 34.0 °C</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Why Lookup Fusion Matrix? -->
+    <div class="card p-6 sm:p-8 bg-white border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xl font-bold text-slate-900">3. Why Discrete Fusion Matrix instead of Summation?</h3>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Both WBGT and IMD alerts derive from correlated atmospheric temperature signals. If an algorithm simply adds
+        their numeric scores together, high temperatures are <em>double-counted</em>, creating spurious extreme alerts.
+      </p>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        HeatWave Guardian solves this using a rigorous <strong>20-cell lookup fusion matrix</strong> ($5 \times 4$),
+        ensuring each biometeorological condition produces a stable, validated environmental base risk (Low, Moderate, High, Very High, Extreme).
+      </p>
+    </div>
+
+    <!-- 4. Physiological Personalization -->
+    <div class="card p-6 sm:p-8 bg-white border border-slate-200 shadow-sm space-y-3">
+      <h3 class="text-xl font-bold text-slate-900">4. Physiological Vulnerability & Escalation</h3>
+      <p class="text-sm text-slate-600 leading-relaxed">
+        Environmental base risk is transformed into personalized risk through individual physiological factors:
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-600">
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+          <strong class="text-slate-900 block">Age Vulnerability</strong>
+          <span>Children (&lt;18) have underdeveloped sweat gland density and higher surface-area-to-mass ratios. Seniors (60+) experience reduced cardiovascular stroke volume and diminished thirst perception.</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+          <strong class="text-slate-900 block">Work Intensity & Metabolic Heat</strong>
+          <span>Heavy and very heavy manual labor generates 400–600 Watts of internal metabolic heat, dramatically accelerating the rate of core body temperature rise.</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+          <strong class="text-slate-900 block">Thermal Adaptation (Experience)</strong>
+          <span>Workers unaccustomed to working in hot weather produce less sweat with higher salt loss, triggering circulatory collapse much faster than acclimatized workers.</span>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+          <strong class="text-slate-900 block">Clothing & PPE Insulation</strong>
+          <span>Heavy overalls and impermeable personal protective gear (PPE) create a vapor barrier that traps metabolic heat and prevents sweat evaporation.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Transparent Limitations -->
+    <div class="callout-honest p-6 rounded-2xl bg-[#fff9f6] border border-[#f0ded6] space-y-2">
+      <h4 class="text-sm font-extrabold text-[#a43700] uppercase tracking-wider">
+        Documented Scientific Limitations
+      </h4>
+      <ul class="list-disc list-inside text-xs text-slate-700 space-y-1.5 leading-relaxed">
+        <li><strong>Internet Connectivity for Real-Time Weather</strong>: Live assessments require active HTTPS connections to Open-Meteo. The system returns HTTP 502 with clean notices rather than fabricating synthetic data when offline.</li>
+        <li><strong>ERA5 Historical Reanalysis Resolution</strong>: Coarse ~25km reanalysis grid cells have a published cold bias over India and average out localized ground-station maximums by ~2–4°C.</li>
+        <li><strong>Proxy Indicators are Not Medical Diagnoses</strong>: The Experimental Mortality Risk Index is an aggregate decision-support indicator and does not estimate individual clinical outcomes.</li>
+      </ul>
+    </div>
+
+    <!-- Scientific References -->
+    <div class="card p-6 bg-white border border-slate-200 shadow-sm space-y-2 text-xs text-slate-500">
+      <div class="font-bold text-slate-800 uppercase tracking-wider text-[10px]">Academic & Regulatory Citations</div>
+      <ol class="list-decimal list-inside space-y-1">
+        <li>Liljegren, J. C., et al. (2008). <em>Modeling the Wet Bulb Globe Temperature Using Standard Meteorological Measurements</em>. Journal of Occupational and Environmental Hygiene, 5(10), 645–655.</li>
+        <li>Stull, R. (2011). <em>Wet-Bulb Temperature from Relative Humidity and Air Temperature</em>. Journal of Applied Meteorology and Climatology, 50(11), 2267–2269.</li>
+        <li>ISO 7243:2017. <em>Ergonomics of the Thermal Environment — Assessment of Heat Stress Using the WBGT (Wet Bulb Globe Temperature) Index</em>. International Organization for Standardization.</li>
+        <li>India Meteorological Department (IMD). <em>Heatwave Criteria and Standard Operating Procedures</em>. Ministry of Earth Sciences, Government of India.</li>
+        <li>National Disaster Management Authority (NDMA). <em>National Guidelines for Preparation of Action Plan - Prevention and Management of Heat Wave</em>. Government of India.</li>
+      </ol>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

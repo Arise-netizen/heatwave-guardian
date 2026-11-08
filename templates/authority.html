@@ -1,0 +1,1362 @@
+{% extends "base.html" %}
+
+{% block title %}Authority Dashboard — Municipal Heat-Risk Intelligence{% endblock %}
+
+{% block head %}
+<!-- MapLibre GL JS (Open-Source, High-Performance WebGL, Zero Key Required) -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="/static/map_config.js"></script>
+<style>
+  #authority-map {
+    height: 520px;
+    width: 100%;
+    border-radius: 1rem;
+    z-index: 10;
+  }
+  .maplibregl-popup-content {
+    border-radius: 0.75rem;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    max-width: 320px;
+  }
+  .maplibregl-popup-close-button {
+    padding: 4px 8px;
+    font-size: 16px;
+    color: #64748b;
+  }
+  .maplibregl-ctrl-group {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #cbd5e1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[#a43700] font-bold mb-1">
+        <span>Public Safety & Disaster Management</span>
+        <span>•</span>
+        <span>Geospatial Intelligence</span>
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Authority / Municipal Heat-Risk Map</h1>
+      <p class="text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+        Area-wide heat stress monitoring and NDMA Heat Action Plan coordination for municipal commissioners,
+        district disaster management authorities (DDMAs), and emergency response teams across India.
+      </p>
+    </div>
+
+    <!-- Live Status Pill -->
+    <div class="flex items-center space-x-2">
+      <span class="px-3 py-1.5 rounded-full text-xs font-bold bg-white border border-slate-200 shadow-xs flex items-center space-x-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-slate-700">Real-Time Atmospheric Sync</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Summary Cards Row -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs">
+      <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Monitored Centers</span>
+      <div id="auth-stat-monitored" class="font-mono text-3xl font-black text-slate-900 mt-1">--</div>
+      <span class="text-[11px] text-slate-500">Major Municipal Zones</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs">
+      <span class="text-[10px] uppercase font-bold text-red-700 tracking-wider">Red Alerts</span>
+      <div id="auth-stat-red" class="font-mono text-3xl font-black text-red-700 mt-1">--</div>
+      <span class="text-[11px] text-red-600 font-semibold">Severe Heatwave Emergency</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs">
+      <span class="text-[10px] uppercase font-bold text-orange-600 tracking-wider">Orange Warnings</span>
+      <div id="auth-stat-orange" class="font-mono text-3xl font-black text-orange-600 mt-1">--</div>
+      <span class="text-[11px] text-orange-600 font-semibold">Heatwave Threshold Alert</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs">
+      <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Yellow / Normal</span>
+      <div id="auth-stat-safe" class="font-mono text-3xl font-black text-slate-700 mt-1">--</div>
+      <span class="text-[11px] text-slate-500">Advisory / Manageable</span>
+    </div>
+  </div>
+
+  <!-- Interactive Map Card -->
+  <div class="card p-6 bg-white border border-slate-200 shadow-md space-y-4">
+    
+    <!-- Map Control Filter Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Map Filter:</span>
+        <button type="button" onclick="setMapFilter('all')" id="filter-all-btn"
+                class="px-3 py-1 rounded-lg text-xs font-bold bg-[#a43700] text-white shadow-xs transition-colors">
+          All Centers
+        </button>
+        <button type="button" onclick="setMapFilter('high_plus')" id="filter-red-btn"
+                class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+          High+ (Red & Orange Only)
+        </button>
+        <button type="button" onclick="setMapFilter('very_high_plus')" id="filter-vhigh-btn"
+                class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+          Very High+
+        </button>
+        <button type="button" onclick="setMapFilter('extreme')" id="filter-ext-btn"
+                class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+          Extreme Risk Only
+        </button>
+
+        <button type="button" onclick="recenterMap()" id="recenter-map-btn"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center space-x-1"
+                title="Reset map view to whole India">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Recenter</span>
+        </button>
+
+        <span class="h-4 w-px bg-slate-300 mx-1"></span>
+
+        <!-- ML Hyperlocal Grid Toggle Button -->
+        <button type="button" onclick="toggleMLGridLayer()" id="toggle-ml-grid-btn"
+                class="px-3 py-1 rounded-lg text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 transition-all flex items-center space-x-1.5 shadow-2xs">
+          <span>🔬</span>
+          <span id="ml-grid-btn-label">ML Hyperlocal Grid: Off</span>
+        </button>
+
+        <!-- Focus City Dropdown -->
+        <select id="city-focus-select" onchange="onCityFocusChange(this.value)"
+                class="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-purple-500">
+          <option value="">Focus City (Overview)</option>
+          <option value="Delhi">Delhi</option>
+          <option value="Hyderabad">Hyderabad</option>
+          <option value="Mumbai">Mumbai</option>
+          <option value="Ahmedabad">Ahmedabad</option>
+          <option value="Kolkata">Kolkata</option>
+          <option value="Bengaluru">Bengaluru</option>
+          <option value="Pune">Pune</option>
+          <option value="Jaipur">Jaipur</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Khammam">Khammam</option>
+        </select>
+      </div>
+
+      <div class="flex items-center space-x-3 text-xs">
+        <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-red-600"></span><span class="font-semibold text-slate-600">Red Alert</span></span>
+        <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span><span class="font-semibold text-slate-600">Orange Alert</span></span>
+        <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span class="font-semibold text-slate-600">Yellow Alert</span></span>
+        <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span class="font-semibold text-slate-600">Normal</span></span>
+      </div>
+    </div>
+
+
+
+    <!-- MapLibre GL Map Container -->
+    <div class="relative">
+      <div id="authority-map" class="shadow-inner border border-slate-200"></div>
+      
+      <!-- Loading State Overlay -->
+      <div id="map-loading-state" class="absolute inset-0 flex items-center justify-center bg-slate-50/90 z-[500] rounded-xl transition-opacity">
+        <div class="text-center p-6 space-y-2">
+          <svg class="animate-spin h-8 w-8 text-[#a43700] mx-auto" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-sm font-bold text-slate-700">Loading Municipal Heat Risk Centers...</p>
+          <p class="text-xs text-slate-500">Syncing live atmospheric observations across India</p>
+        </div>
+      </div>
+
+      <!-- Empty State Overlay (shown when filter yields zero results) -->
+      <div id="map-empty-state" class="hidden absolute inset-0 flex items-center justify-center bg-slate-50/90 z-[500] rounded-xl pointer-events-none">
+        <div class="text-center p-6">
+          <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+          <p class="text-sm font-bold text-slate-600">No locations match this filter</p>
+          <p class="text-xs text-slate-400 mt-1">Try selecting a different filter to view risk locations.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between text-xs text-slate-500 pt-2">
+      <span>Click any municipal center or ~1km grid cell to inspect live meteorological observations, demographic exposure proxies, and HAP action instructions.</span>
+      <div class="flex items-center space-x-3">
+        <span id="filter-count" class="font-semibold text-slate-600">-- centers shown</span>
+        <span class="font-bold">Base Map: MapLibre GL &bull; OpenStreetMap</span>
+      </div>
+    </div>
+
+    <!-- ML Hyperlocal Cell Inspection Panel -->
+    <div id="cell-inspection-panel" class="hidden mt-4 p-5 bg-gradient-to-br from-white to-purple-50/40 rounded-2xl border-2 border-purple-300 shadow-lg space-y-4 transition-all">
+      <div class="flex items-start justify-between border-b border-purple-100 pb-3">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="inspect-cell-id" class="px-2.5 py-0.5 rounded text-[11px] font-mono font-black bg-purple-900 text-white tracking-wider">CELL-ID</span>
+            <span id="inspect-cell-name" class="font-black text-slate-900 text-base">Cell Sector Name</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">~1km Microclimate Cell</span>
+          </div>
+          <p id="inspect-sector-desc" class="text-xs text-slate-600 mt-1">Sector morphology description</p>
+        </div>
+        <button type="button" onclick="closeCellInspection()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Close Panel">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Comparison Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- 1. REANALYSIS -->
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500">1. REANALYSIS (Background)</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-700">~25km Grid</span>
+          </div>
+          <div class="text-2xl font-mono font-bold text-slate-900" id="inspect-bg-temp">--°C</div>
+          <div class="text-[11px] text-slate-600 space-y-0.5">
+            <div>Relative Humidity: <span class="font-mono font-bold text-slate-800" id="inspect-bg-rh">--%</span></div>
+            <div>Surface Wind: <span class="font-mono font-bold text-slate-800" id="inspect-bg-wind">-- m/s</span></div>
+            <div>Solar Irradiance: <span class="font-mono font-bold text-slate-800" id="inspect-bg-solar">-- W/m²</span></div>
+          </div>
+          <div class="text-[10px] text-slate-400 italic">Source: ECMWF ERA5 / Numerical NWP</div>
+        </div>
+
+        <!-- 2. ML-PREDICTED -->
+        <div class="p-3.5 rounded-xl bg-purple-50/90 border border-purple-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold tracking-wider uppercase text-purple-900">2. ML-PREDICTED (Microclimate)</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-200 text-purple-900" id="inspect-ml-version">v1.0.0-rf</span>
+          </div>
+          <div class="flex items-baseline space-x-2">
+            <span class="text-2xl font-mono font-black text-purple-950" id="inspect-ml-temp">--°C</span>
+            <span class="text-xs font-mono font-bold text-amber-700" id="inspect-ml-anomaly">+0.0°C UHI</span>
+          </div>
+          <div class="text-[11px] text-slate-600 leading-snug">
+            Downscaled dry-bulb temperature incorporating local urban surface morphology.
+          </div>
+          <div class="text-[10px] text-purple-800 font-semibold flex items-center space-x-1">
+            <span>Confidence:</span>
+            <span class="px-1.5 py-0.5 rounded bg-purple-200 font-bold" id="inspect-ml-conf">High</span>
+          </div>
+        </div>
+
+        <!-- 3. DETERMINISTIC WBGT -->
+        <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold tracking-wider uppercase text-[#a43700]">3. DETERMINISTIC WBGT & RISK</span>
+            <span class="px-2 py-0.5 rounded text-[9px] font-black text-white" id="inspect-risk-badge">HIGH</span>
+          </div>
+          <div class="text-2xl font-mono font-black text-[#a43700]" id="inspect-wbgt-temp">--°C</div>
+          <div class="text-[11px] text-slate-600 space-y-0.5">
+            <div>Thermal Band: <span class="font-bold text-slate-900" id="inspect-wbgt-band">Extreme Danger</span></div>
+            <div>IMD Heatwave: <span class="font-bold text-slate-800" id="inspect-imd-status">Heatwave</span></div>
+          </div>
+          <div class="text-[10px] text-slate-500 italic">Governed by Liljegren & ISO 7243</div>
+        </div>
+      </div>
+
+      <!-- Major Physical Drivers -->
+      <div class="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center justify-between">
+          <span>Major Contributing Microclimate Drivers</span>
+          <span class="text-[10px] font-normal text-slate-400" id="inspect-data-quality">Verified Reanalysis Input</span>
+        </div>
+        <div id="inspect-drivers-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Ground Reference & Safety Disclaimer -->
+      <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-slate-700">OBSERVED Reference:</span>
+          <span class="text-slate-500" id="inspect-observed-ref">IMD Observational Ground Station Climatology</span>
+        </div>
+        <span class="text-[10px] text-slate-400 italic">Grid cells represent ~1km microclimate sector morphology estimates, not ward-level sensor networks.</span>
+      </div>
+
+      <div class="px-3 py-1.5 rounded-lg bg-purple-50 text-[10px] text-purple-900 border border-purple-200">
+        <strong>Scientific Safety Guardrail:</strong> ML provides environmental temperature refinement only; WBGT and risk classifications remain deterministic physics. ML does NOT produce clinical diagnoses, heatstroke forecasts, or mortality claims.
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- NDMA Heat Action Plan Response Grid -->
+  <div class="card p-6 bg-white border border-slate-200 shadow-sm space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">
+          Government Heat Action Plan (HAP) Standard Operating Matrix
+        </h3>
+        <p class="text-xs text-slate-500">Actionable protocols standardized across District Disaster Management Authorities</p>
+      </div>
+      <span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+        Framework Architecture
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+      
+      <!-- Red Alert Card -->
+      <div class="p-4 rounded-xl bg-red-50 border border-red-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-red-900 uppercase">RED ALERT PROTOCOL</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-600 text-white">EMERGENCY</span>
+        </div>
+        <p class="text-red-950 leading-relaxed">
+          Triggered when daily temperatures exceed severe heatwave departure criteria (Plains &ge; 44°C) or WBGT enters Extreme Danger.
+        </p>
+        <ul class="list-disc list-inside text-red-900 space-y-1 pt-1 font-medium">
+          <li>Mandatory work stoppage for manual outdoor labor 11 AM – 4 PM.</li>
+          <li>Activate emergency cooling shelters in all municipal wards.</li>
+          <li>Deploy municipal water tankers to slums and construction zones.</li>
+          <li>Put government hospital heat-wards on code-red alert.</li>
+        </ul>
+      </div>
+
+      <!-- Orange Alert Card -->
+      <div class="p-4 rounded-xl bg-orange-50 border border-orange-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-orange-900 uppercase">ORANGE ALERT PROTOCOL</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-orange-600 text-white">WARNING</span>
+        </div>
+        <p class="text-orange-950 leading-relaxed">
+          Triggered when temperature departure is 4.5°C to 6.4°C above normal or WBGT reaches Danger zone.
+        </p>
+        <ul class="list-disc list-inside text-orange-900 space-y-1 pt-1 font-medium">
+          <li>Enforce 30m work / 30m rest hourly shifts for laborers.</li>
+          <li>Open public drinking water kiosks along transit corridors.</li>
+          <li>Broadcast public advisories on local media and SMS.</li>
+          <li>Equip traffic police booths with oral rehydration packs.</li>
+        </ul>
+      </div>
+
+      <!-- Yellow Alert Card -->
+      <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="font-black text-amber-900 uppercase">YELLOW WATCH PROTOCOL</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500 text-slate-900">ADVISORY</span>
+        </div>
+        <p class="text-amber-950 leading-relaxed">
+          Triggered when temperature departure is moderate or WBGT enters Extreme Caution band.
+        </p>
+        <ul class="list-disc list-inside text-amber-900 space-y-1 pt-1 font-medium">
+          <li>Issue heat awareness bulletins to schools and workplaces.</li>
+          <li>Ensure school sports activities cease before 10 AM.</li>
+          <li>Inspect municipal piped water pressure and storage tanks.</li>
+          <li>Stock primary health centers with IV electrolytes.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION: ML HYPERLOCAL INTELLIGENCE LAYER -->
+  <div class="card p-6 bg-white border border-slate-200 shadow-md space-y-5">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200">
+      <div>
+        <div class="flex items-center space-x-2 text-[10px] uppercase font-bold text-purple-700 tracking-wider mb-1">
+          <span>Spatial Microclimate Intelligence</span>
+          <span>•</span>
+          <span>Model: Random Forest Regressor v1.0.0-rf</span>
+        </div>
+        <h3 class="text-xl font-black text-slate-900">ML Hyperlocal Layer</h3>
+        <p class="text-xs text-slate-500 mt-0.5 max-w-3xl leading-relaxed">
+          Downscales coarse ~25km reanalysis to localized in-situ urban microclimates ($T_{\text{local}}^{\text{ML}}$) using real-time background weather,
+          surface imperviousness, vegetative canopy deficit, and solar loading.
+        </p>
+      </div>
+
+      <!-- Scientific Disclaimer & Boundary Badge -->
+      <div class="flex items-center space-x-2 flex-shrink-0">
+        <span class="px-3 py-1.5 rounded-xl bg-purple-50 text-purple-800 border border-purple-200 text-xs font-bold flex items-center space-x-1.5 shadow-2xs">
+          <span>🔬</span>
+          <span>Non-Medical Environmental Downscaling</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Boundary Notice Callout -->
+    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-start space-x-2.5">
+      <span class="text-base leading-none">ℹ️</span>
+      <p class="leading-relaxed text-[11px]">
+        <strong>Scientific Safety Architecture:</strong> The ML model refines the localized temperature ($T_{\text{local}}^{\text{ML}}$) by predicting the Urban Heat Island anomaly ($\Delta T_{\text{UHI}}$). All resulting Wet-Bulb Globe Temperature (WBGT) values and ISO 7243 operational work-rest schedules are calculated through the transparent, deterministic biometeorological engine. <em>The ML layer never declares medical diagnosis or mortality prediction.</em>
+      </p>
+    </div>
+
+    <!-- Hyperlocal Table -->
+    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead class="bg-slate-50 text-slate-600 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200">
+          <tr>
+            <th class="py-2.5 px-3">Municipal Center</th>
+            <th class="py-2.5 px-2">Background Reanalysis</th>
+            <th class="py-2.5 px-2">ML Local Estimate</th>
+            <th class="py-2.5 px-2">Thermal Anomaly (&Delta;T)</th>
+            <th class="py-2.5 px-2">Recalculated WBGT</th>
+            <th class="py-2.5 px-3">Key Physical Drivers</th>
+            <th class="py-2.5 px-2">Data Quality</th>
+          </tr>
+        </thead>
+        <tbody id="ml-hyperlocal-tbody" class="divide-y divide-slate-100 text-slate-700">
+          <tr>
+            <td colspan="7" class="py-4 text-center text-slate-400 italic font-medium">
+              Loading spatial ML microclimate downscaling estimates...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let map = null;
+  let allFeatures = [];
+  let allGridFeatures = [];
+  let currentFilter = 'all';
+  let isGridActive = false;
+  let currentFocusCity = '';
+  let activePopup = null;
+  let hoverPopup = null;
+  let isMapLoaded = false;
+
+  const INDIA_CENTER = [78.9629, 21.5]; // [lon, lat]
+  const DEFAULT_ZOOM = 4.3;
+
+  const CITY_COORDS = {
+    'Delhi': [77.2090, 28.6139, 11],
+    'Hyderabad': [78.4867, 17.3850, 11],
+    'Mumbai': [72.8777, 19.0760, 11],
+    'Ahmedabad': [72.5714, 23.0225, 11],
+    'Kolkata': [88.3639, 22.5726, 11],
+    'Bengaluru': [77.5946, 12.9716, 11],
+    'Pune': [73.8567, 18.5204, 11],
+    'Jaipur': [75.7873, 26.9124, 11],
+    'Lucknow': [80.9462, 26.8467, 11],
+    'Khammam': [80.1514, 17.2473, 12],
+  };
+
+  const RISK_TO_ALERT_MAP = {
+    'EXTREME': 'RED',
+    'VERY HIGH': 'RED',
+    'HIGH': 'ORANGE',
+    'MODERATE': 'YELLOW',
+    'LOW': 'GREEN',
+    'NORMAL': 'GREEN',
+    'HEATWAVE': 'ORANGE',
+    'SEVERE HEATWAVE': 'RED',
+    'HEAT DAY': 'YELLOW',
+  };
+
+  const ALERT_COLORS = {
+    'RED': '#c1121f',
+    'ORANGE': '#e8590c',
+    'YELLOW': '#f2a900',
+    'GREEN': '#2f9e44',
+  };
+
+  const ALERT_RADII = {
+    'RED': 16,
+    'ORANGE': 14,
+    'YELLOW': 12,
+    'GREEN': 10,
+  };
+
+  function parsePropertyObject(val) {
+    if (typeof val === 'string') {
+      try { return JSON.parse(val); } catch (_) { return val; }
+    }
+    return val;
+  }
+
+  function getAuthoritativeAlert(p) {
+    if (p && p.hap_level) {
+      const hap = String(p.hap_level).trim().toUpperCase();
+      if (['RED', 'ORANGE', 'YELLOW', 'GREEN'].includes(hap)) {
+        return hap;
+      }
+    }
+    const baseRisk = String((p && (p.base_risk || p.environmental_risk || p.thermal_stress_level)) || 'LOW').trim().toUpperCase();
+    return RISK_TO_ALERT_MAP[baseRisk] || 'GREEN';
+  }
+
+  function isExtremeRisk(p) {
+    if (!p) return false;
+    const baseRisk = String(p.base_risk || p.environmental_risk || '').trim().toUpperCase();
+    const thermalStress = String(p.thermal_stress_level || '').trim().toUpperCase();
+    const hapLevel = String(p.hap_level || '').trim().toUpperCase();
+    return baseRisk === 'EXTREME' || baseRisk === 'VERY HIGH' || thermalStress === 'EXTREME' || hapLevel === 'RED';
+  }
+
+  function getMarkerColor(alertLevel) {
+    const lvl = String(alertLevel || 'GREEN').trim().toUpperCase();
+    return ALERT_COLORS[lvl] || '#2f9e44';
+  }
+
+  function getMarkerRadius(alertLevel) {
+    const lvl = String(alertLevel || 'GREEN').trim().toUpperCase();
+    return ALERT_RADII[lvl] || 10;
+  }
+
+  function initMap() {
+    if (typeof maplibregl === 'undefined') {
+      showMapError('MapLibre GL library failed to load.');
+      return;
+    }
+
+    const style = window.MAP_CONFIG && window.MAP_CONFIG.getMapLibreStyle
+      ? window.MAP_CONFIG.getMapLibreStyle()
+      : {
+          version: 8,
+          sources: {
+            'osm-raster-source': {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+            }
+          },
+          layers: [
+            {
+              id: 'osm-raster-layer',
+              type: 'raster',
+              source: 'osm-raster-source',
+              minzoom: 0,
+              maxzoom: 19
+            }
+          ]
+        };
+
+    try {
+      map = new maplibregl.Map({
+        container: 'authority-map',
+        style: style,
+        center: INDIA_CENTER,
+        zoom: DEFAULT_ZOOM,
+        minZoom: 3,
+        maxZoom: 18,
+        attributionControl: false,
+      });
+
+      // Attribution
+      map.addControl(new maplibregl.AttributionControl({
+        compact: false,
+        customAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+      }), 'bottom-right');
+
+      // Navigation Control
+      map.addControl(new maplibregl.NavigationControl({
+        showCompass: true,
+        showZoom: true
+      }), 'top-right');
+
+      map.on('load', () => {
+        isMapLoaded = true;
+        setupMapLayers();
+        loadAuthorityLayer();
+      });
+
+      map.on('error', (e) => {
+        console.warn('MapLibre status event:', e);
+        if (e && e.error && (e.error.status === 401 || e.error.status === 403)) {
+          showMapError('Basemap provider access error.');
+        }
+      });
+    } catch (err) {
+      console.error('Failed to initialize MapLibre GL map:', err);
+      showMapError('WebGL initialization failed. Please check hardware acceleration.');
+    }
+  }
+
+  function setupMapLayers() {
+    if (!map) return;
+
+    // 1. SPATIAL GRID SOURCE & LAYERS (Polygons ~1km)
+    if (!map.getSource('spatial-grid')) {
+      map.addSource('spatial-grid', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+
+      // Grid fill layer with data-driven risk coloring
+      map.addLayer({
+        id: 'grid-cells-fill',
+        type: 'fill',
+        source: 'spatial-grid',
+        layout: {
+          visibility: 'none'
+        },
+        paint: {
+          'fill-color': [
+            'coalesce',
+            ['get', 'risk_color'],
+            ['match', ['get', 'risk_category'],
+              'Extreme', '#c1121f',
+              'Very High', '#e03131',
+              'High', '#e8590c',
+              'Moderate', '#f59f00',
+              'Low', '#2f9e44',
+              '#2f9e44'
+            ]
+          ],
+          'fill-opacity': 0.45
+        }
+      });
+
+      // Grid boundary line layer (dashed)
+      map.addLayer({
+        id: 'grid-cells-line',
+        type: 'line',
+        source: 'spatial-grid',
+        layout: {
+          visibility: 'none'
+        },
+        paint: {
+          'line-color': [
+            'coalesce',
+            ['get', 'risk_color'],
+            '#7c3aed'
+          ],
+          'line-width': 2,
+          'line-dasharray': [2, 2]
+        }
+      });
+
+      // Grid highlight border for clicked cell
+      map.addLayer({
+        id: 'grid-cells-highlight',
+        type: 'line',
+        source: 'spatial-grid',
+        layout: {
+          visibility: 'none'
+        },
+        paint: {
+          'line-color': '#4c1d95',
+          'line-width': 4
+        },
+        filter: ['==', ['get', 'cell_id'], '']
+      });
+    }
+
+    // 2. MUNICIPAL ZONES SOURCE & LAYERS (Points)
+    if (!map.getSource('authority-zones')) {
+      map.addSource('authority-zones', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+
+      // Selected zone outer halo
+      map.addLayer({
+        id: 'zones-selected-halo',
+        type: 'circle',
+        source: 'authority-zones',
+        paint: {
+          'circle-radius': 24,
+          'circle-color': '#7c3aed',
+          'circle-opacity': 0.35,
+          'circle-stroke-width': 2.5,
+          'circle-stroke-color': '#4c1d95'
+        },
+        filter: ['==', ['get', 'name'], '']
+      });
+
+      // Main heat risk circle layer with data-driven styling
+      map.addLayer({
+        id: 'zones-heat-circle',
+        type: 'circle',
+        source: 'authority-zones',
+        paint: {
+          'circle-radius': [
+            'match', ['get', 'hap_level'],
+            'RED', 16,
+            'ORANGE', 14,
+            'YELLOW', 12,
+            'GREEN', 10,
+            ['match', ['get', 'base_risk'],
+              'Extreme', 16,
+              'Very High', 15,
+              'High', 14,
+              'Moderate', 12,
+              10
+            ]
+          ],
+          'circle-color': [
+            'match', ['get', 'hap_level'],
+            'RED', '#c1121f',
+            'ORANGE', '#e8590c',
+            'YELLOW', '#f2a900',
+            'GREEN', '#2f9e44',
+            ['coalesce', ['get', 'risk_color'], '#2f9e44']
+          ],
+          'circle-opacity': 0.95,
+          'circle-stroke-width': 2.5,
+          'circle-stroke-color': '#ffffff'
+        }
+      });
+    }
+
+    bindMapInteractions();
+  }
+
+  function bindMapInteractions() {
+    hoverPopup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 15
+    });
+
+    // Zones hover
+    map.on('mouseenter', 'zones-heat-circle', (e) => {
+      map.getCanvas().style.cursor = 'pointer';
+      if (e.features && e.features.length > 0) {
+        const f = e.features[0];
+        const p = f.properties || {};
+        const coords = f.geometry.coordinates.slice();
+        const wbgtDisplay = p.wbgt_c !== undefined && p.wbgt_c !== null ? `${p.wbgt_c}°C` : '--';
+        hoverPopup.setLngLat(coords)
+          .setHTML(`<div class="px-2 py-1 text-xs font-bold text-slate-800 bg-white rounded">${p.name || 'Zone'} (${wbgtDisplay})</div>`)
+          .addTo(map);
+      }
+    });
+
+    map.on('mouseleave', 'zones-heat-circle', () => {
+      map.getCanvas().style.cursor = '';
+      if (hoverPopup) hoverPopup.remove();
+    });
+
+    // Zones click
+    map.on('click', 'zones-heat-circle', (e) => {
+      if (!e.features || !e.features.length) return;
+      const f = e.features[0];
+      const p = parseFeatureProperties(f.properties);
+      const coords = f.geometry.coordinates.slice();
+
+      // Highlight selected zone
+      map.setFilter('zones-selected-halo', ['==', ['get', 'name'], p.name || '']);
+
+      if (activePopup) activePopup.remove();
+      activePopup = new maplibregl.Popup({ offset: 15, maxWidth: '320px' })
+        .setLngLat(coords)
+        .setHTML(createZonePopupHtml(p))
+        .addTo(map);
+
+      openZoneInspection(p);
+    });
+
+    // Grid cells hover
+    map.on('mouseenter', 'grid-cells-fill', (e) => {
+      if (isGridActive) {
+        map.getCanvas().style.cursor = 'pointer';
+        if (e.features && e.features.length > 0) {
+          const f = e.features[0];
+          const p = parseFeatureProperties(f.properties);
+          hoverPopup.setLngLat(e.lngLat)
+            .setHTML(`<div class="px-2 py-1 text-xs font-bold text-purple-950 bg-white rounded shadow-xs">${p.cell_id} (${p.ml_temp_c}°C)</div>`)
+            .addTo(map);
+        }
+      }
+    });
+
+    map.on('mouseleave', 'grid-cells-fill', () => {
+      map.getCanvas().style.cursor = '';
+      if (hoverPopup) hoverPopup.remove();
+    });
+
+    // Grid cells click
+    map.on('click', 'grid-cells-fill', (e) => {
+      if (!isGridActive || !e.features || !e.features.length) return;
+      const f = e.features[0];
+      const p = parseFeatureProperties(f.properties);
+
+      // Highlight selected cell
+      map.setFilter('grid-cells-highlight', ['==', ['get', 'cell_id'], p.cell_id || '']);
+
+      if (activePopup) activePopup.remove();
+      activePopup = new maplibregl.Popup({ offset: 10, maxWidth: '280px' })
+        .setLngLat(e.lngLat)
+        .setHTML(createCellPopupHtml(p))
+        .addTo(map);
+
+      openCellInspection(p);
+    });
+  }
+
+  function parseFeatureProperties(props) {
+    if (!props) return {};
+    const p = typeof props === 'string' ? JSON.parse(props) : Object.assign({}, props);
+    p.demographics = parsePropertyObject(p.demographics);
+    p.thermal_stress = parsePropertyObject(p.thermal_stress);
+    p.background_weather = parsePropertyObject(p.background_weather);
+    p.ml_drivers = parsePropertyObject(p.ml_drivers);
+    p.major_drivers = parsePropertyObject(p.major_drivers);
+    return p;
+  }
+
+  function createZonePopupHtml(p) {
+    const alert = getAuthoritativeAlert(p);
+    const color = getMarkerColor(alert);
+    const alertBadgeText = alert === 'GREEN' ? 'NORMAL' : `${alert} ALERT`;
+    const wbgtDisplay = p.wbgt_c !== undefined && p.wbgt_c !== null ? `${p.wbgt_c}°C` : '--';
+    const weatherNotice = p.weather_available === false
+      ? '<div class="text-[9px] text-amber-700 bg-amber-50 rounded px-1.5 py-0.5 border border-amber-200 font-semibold mb-2">⚠ Weather data estimated (API unavailable)</div>'
+      : '';
+
+    const popM = p.demographics && p.demographics.population ? (p.demographics.population / 1000000).toFixed(1) + 'M' : '--';
+    const isDemo = p.demographics && p.demographics.is_demo_data;
+
+    return `
+      <div class="p-3.5 w-68 space-y-2.5 font-sans">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <div class="font-black text-slate-900 text-sm tracking-tight">${(p.name || 'UNKNOWN').toUpperCase()}</div>
+            <div class="text-[10px] text-slate-500 font-medium">${p.state || ''} • ${(p.region_type || 'plains').toUpperCase()}</div>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase" style="background-color: ${color}20; color: ${color}; border: 1px solid ${color}50;">
+            ${alertBadgeText}
+          </span>
+        </div>
+
+        ${weatherNotice}
+
+        <div class="grid grid-cols-2 gap-1.5 text-xs">
+          <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+            <span class="text-[9px] text-slate-400 font-bold uppercase block">Air Temp</span>
+            <span class="font-mono font-bold text-slate-900">${p.temp_c !== undefined ? p.temp_c : '--'} °C</span>
+          </div>
+          <div class="p-2 rounded-lg bg-[#fff5f0] border border-[#f0ded6]">
+            <span class="text-[9px] text-[#a43700] font-bold uppercase block">WBGT</span>
+            <span class="font-mono font-black text-[#a43700]">${wbgtDisplay}</span>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-lg bg-purple-50/80 border border-purple-200 text-xs space-y-1">
+          <div class="flex justify-between items-center text-[9px] font-bold text-purple-900 uppercase">
+            <span>ML Microclimate</span>
+            <span class="font-mono text-purple-700">${p.ml_model_version || 'v1.0.0-rf'}</span>
+          </div>
+          <div class="flex justify-between font-mono text-[11px]">
+            <span class="text-slate-600">Local Temp (UHI):</span>
+            <span class="font-bold text-purple-950">${p.ml_temp_c || p.temp_c || '--'}°C (${p.ml_anomaly_c ? (p.ml_anomaly_c > 0 ? '+' : '') + p.ml_anomaly_c + '°C' : '+0.0°C'})</span>
+          </div>
+          <div class="flex justify-between font-mono text-[11px]">
+            <span class="text-slate-600">Hyperlocal WBGT:</span>
+            <span class="font-bold text-[#a43700]">${p.ml_wbgt_c || p.wbgt_c || '--'}°C</span>
+          </div>
+        </div>
+
+        <div class="text-xs space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <div class="flex justify-between">
+            <span class="text-slate-500 font-medium">Thermal Stress:</span>
+            <span class="font-black uppercase" style="color: ${p.risk_color || '#a43700'}">${p.thermal_stress_level || p.wbgt_band || '--'}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500 font-medium">IMD Status:</span>
+            <span class="font-bold text-slate-800 uppercase">${p.imd_status || 'NORMAL'}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500 font-medium">Risk Level:</span>
+            <span class="font-black uppercase" style="color: ${p.risk_color || '#a43700'}">${p.base_risk || '--'}</span>
+          </div>
+        </div>
+
+        ${p.public_action_summary ? `
+        <div class="text-[11px] text-slate-600 bg-amber-50 p-2 rounded-lg border border-amber-100 leading-snug">
+          <strong class="text-amber-900 block font-bold text-[10px] uppercase">Recommended Action:</strong>
+          ${p.public_action_summary}
+        </div>
+        ` : ''}
+
+        <div class="text-[9px] text-slate-400 pt-1 border-t border-slate-100 flex justify-between">
+          <span>Pop: ${popM}</span>
+          <span class="font-mono text-amber-800 font-bold">${isDemo ? 'PROXY DATA' : 'CENSUS DATA'}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function createCellPopupHtml(p) {
+    const wbgtText = p.wbgt_c !== undefined ? `${p.wbgt_c}°C` : '--';
+    return `
+      <div class="p-3 w-64 font-sans text-xs space-y-2">
+        <div class="flex items-center justify-between pb-1.5 border-b border-purple-100">
+          <div>
+            <span class="font-black text-purple-950 block">${p.cell_id}</span>
+            <span class="text-[10px] text-slate-500 font-semibold">${p.sector_type || p.name || 'Microclimate Cell'}</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold text-white uppercase" style="background-color: ${p.risk_color || '#a43700'}">
+            ${p.risk_category || 'MODERATE'}
+          </span>
+        </div>
+        <div class="font-mono space-y-1 text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-600">Background:</span>
+            <span class="font-bold text-slate-800">${p.background_temp_c || '--'}°C</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-purple-900">ML Local:</span>
+            <span class="font-bold text-purple-950">${p.ml_temp_c || '--'}°C (${p.ml_anomaly_c >= 0 ? '+' : ''}${p.ml_anomaly_c}°C)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[#a43700]">WBGT:</span>
+            <span class="font-bold text-[#a43700]">${wbgtText} [${p.wbgt_band || '--'}]</span>
+          </div>
+        </div>
+        <div class="pt-1 border-t border-slate-100 text-[10px] text-purple-800 font-semibold flex justify-between">
+          <span>Conf: ${p.confidence || 'High'}</span>
+          <span>${p.model_version || 'v1.0.0-rf'}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadAuthorityLayer() {
+    const loadingEl = document.getElementById('map-loading-state');
+    try {
+      const resp = await fetch('/api/authority/zones');
+      const data = await resp.json();
+      if (loadingEl) loadingEl.classList.add('hidden');
+
+      if (!resp.ok) {
+        showMapError(data.error || 'Failed to load authority layer.');
+        return;
+      }
+
+      // Update counters
+      document.getElementById('auth-stat-monitored').textContent = data.summary.total_monitored;
+      document.getElementById('auth-stat-red').textContent = data.summary.red_alert;
+      document.getElementById('auth-stat-orange').textContent = data.summary.orange_alert;
+      document.getElementById('auth-stat-safe').textContent = data.summary.yellow_alert + data.summary.green_normal;
+
+      allFeatures = (data.features || []).filter(f => {
+        return f && f.geometry && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length >= 2;
+      });
+
+      if (map && map.getSource('authority-zones')) {
+        map.getSource('authority-zones').setData({
+          type: 'FeatureCollection',
+          features: allFeatures
+        });
+      }
+
+      setMapFilter(currentFilter);
+      renderMLHyperlocalTable(allFeatures);
+    } catch (err) {
+      if (loadingEl) loadingEl.classList.add('hidden');
+      showMapError('Authority geospatial intelligence service is temporarily unavailable.');
+    }
+  }
+
+  function setMapFilter(filterKey) {
+    currentFilter = filterKey;
+
+    const btnAll = document.getElementById('filter-all-btn');
+    const btnRed = document.getElementById('filter-red-btn');
+    const btnVHigh = document.getElementById('filter-vhigh-btn');
+    const btnExt = document.getElementById('filter-ext-btn');
+
+    const activeClass = 'px-3 py-1 rounded-lg text-xs font-bold bg-[#a43700] text-white shadow-xs transition-colors';
+    const inactiveClass = 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors';
+
+    if (btnAll) btnAll.className = inactiveClass;
+    if (btnRed) btnRed.className = inactiveClass;
+    if (btnVHigh) btnVHigh.className = inactiveClass;
+    if (btnExt) btnExt.className = inactiveClass;
+
+    let filterExpression = null;
+
+    if (filterKey === 'red_orange' || filterKey === 'high_plus') {
+      if (btnRed) btnRed.className = activeClass;
+      filterExpression = [
+        'any',
+        ['in', ['get', 'hap_level'], ['literal', ['RED', 'ORANGE']]],
+        ['in', ['get', 'base_risk'], ['literal', ['High', 'Very High', 'Extreme']]]
+      ];
+    } else if (filterKey === 'very_high_plus') {
+      if (btnVHigh) btnVHigh.className = activeClass;
+      filterExpression = [
+        'any',
+        ['==', ['get', 'hap_level'], 'RED'],
+        ['in', ['get', 'base_risk'], ['literal', ['Very High', 'Extreme']]]
+      ];
+    } else if (filterKey === 'extreme') {
+      if (btnExt) btnExt.className = activeClass;
+      filterExpression = [
+        'any',
+        ['==', ['get', 'base_risk'], 'Extreme'],
+        ['==', ['get', 'base_risk'], 'Very High'],
+        ['==', ['get', 'hap_level'], 'RED'],
+        ['==', ['get', 'thermal_stress_level'], 'Extreme']
+      ];
+    } else {
+      if (btnAll) btnAll.className = activeClass;
+      filterExpression = null;
+    }
+
+    if (map && map.getLayer('zones-heat-circle')) {
+      map.setFilter('zones-heat-circle', filterExpression);
+    }
+
+    // Calculate matching features for counter & empty overlay
+    const filtered = allFeatures.filter(f => {
+      const p = f.properties || {};
+      const alert = getAuthoritativeAlert(p);
+      const baseRisk = String(p.base_risk || p.environmental_risk || '').trim();
+
+      if (filterKey === 'red_orange' || filterKey === 'high_plus') {
+        return alert === 'RED' || alert === 'ORANGE' || ['High', 'Very High', 'Extreme'].includes(baseRisk);
+      }
+      if (filterKey === 'very_high_plus') {
+        return alert === 'RED' || ['Very High', 'Extreme'].includes(baseRisk);
+      }
+      if (filterKey === 'extreme') {
+        return isExtremeRisk(p);
+      }
+      return true; // 'all'
+    });
+
+    const countEl = document.getElementById('filter-count');
+    if (countEl) {
+      countEl.textContent = `${filtered.length} of ${allFeatures.length} centers shown`;
+    }
+
+    const emptyOverlay = document.getElementById('map-empty-state');
+    if (filtered.length === 0) {
+      if (emptyOverlay) emptyOverlay.classList.remove('hidden');
+    } else {
+      if (emptyOverlay) emptyOverlay.classList.add('hidden');
+      if (map && !currentFocusCity) {
+        fitBoundsToFeatures(filtered);
+      }
+    }
+  }
+
+  function fitBoundsToFeatures(features) {
+    if (!map || !features || !features.length) return;
+    const bounds = new maplibregl.LngLatBounds();
+    let hasValid = false;
+    features.forEach(f => {
+      if (f.geometry && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length >= 2) {
+        const [lon, lat] = f.geometry.coordinates;
+        if (typeof lon === 'number' && typeof lat === 'number' && !isNaN(lon) && !isNaN(lat)) {
+          bounds.extend([lon, lat]);
+          hasValid = true;
+        }
+      }
+    });
+    if (hasValid) {
+      map.fitBounds(bounds, { padding: 40, maxZoom: 7, duration: 600 });
+    }
+  }
+
+  function recenterMap() {
+    currentFocusCity = '';
+    const citySelect = document.getElementById('city-focus-select');
+    if (citySelect) citySelect.value = '';
+
+    if (allFeatures.length > 0) {
+      fitBoundsToFeatures(allFeatures);
+    } else if (map) {
+      map.flyTo({ center: INDIA_CENTER, zoom: DEFAULT_ZOOM, duration: 800 });
+    }
+  }
+
+  async function onCityFocusChange(city) {
+    currentFocusCity = city;
+    if (city && CITY_COORDS[city] && map) {
+      const [lon, lat, zoom] = CITY_COORDS[city];
+      map.flyTo({ center: [lon, lat], zoom: zoom, duration: 1000 });
+    } else if (map && allFeatures.length > 0) {
+      fitBoundsToFeatures(allFeatures);
+    }
+
+    if (isGridActive) {
+      await loadMLGridLayer(city);
+    }
+  }
+
+  async function loadMLGridLayer(city) {
+    if (!map) return;
+    const url = city ? `/api/authority/grid?city=${encodeURIComponent(city)}` : '/api/authority/grid';
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!resp.ok) return;
+
+      allGridFeatures = data.features || [];
+      const src = map.getSource('spatial-grid');
+      if (src) {
+        src.setData(data);
+      }
+
+      if (isGridActive) {
+        map.setLayoutProperty('grid-cells-fill', 'visibility', 'visible');
+        map.setLayoutProperty('grid-cells-line', 'visibility', 'visible');
+        map.setLayoutProperty('grid-cells-highlight', 'visibility', 'visible');
+
+        if (city && allGridFeatures.length > 0) {
+          const bounds = new maplibregl.LngLatBounds();
+          allGridFeatures.forEach(f => {
+            if (f.geometry && f.geometry.coordinates && f.geometry.coordinates[0]) {
+              f.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
+            }
+          });
+          map.fitBounds(bounds, { padding: 40, maxZoom: 13, duration: 800 });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load spatial grid layer:', e);
+    }
+  }
+
+  async function toggleMLGridLayer() {
+    isGridActive = !isGridActive;
+    const btn = document.getElementById('toggle-ml-grid-btn');
+    const label = document.getElementById('ml-grid-btn-label');
+
+    if (isGridActive) {
+      if (btn) {
+        btn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-purple-900 text-white border border-purple-900 transition-all flex items-center space-x-1.5 shadow-sm';
+      }
+      if (label) label.textContent = 'ML Hyperlocal Grid: ON';
+      await loadMLGridLayer(currentFocusCity);
+    } else {
+      if (btn) {
+        btn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 transition-all flex items-center space-x-1.5 shadow-2xs';
+      }
+      if (label) label.textContent = 'ML Hyperlocal Grid: Off';
+      if (map) {
+        if (map.getLayer('grid-cells-fill')) map.setLayoutProperty('grid-cells-fill', 'visibility', 'none');
+        if (map.getLayer('grid-cells-line')) map.setLayoutProperty('grid-cells-line', 'visibility', 'none');
+        if (map.getLayer('grid-cells-highlight')) map.setLayoutProperty('grid-cells-highlight', 'visibility', 'none');
+      }
+      closeCellInspection();
+    }
+  }
+
+  function renderMLHyperlocalTable(features) {
+    const tbody = document.getElementById('ml-hyperlocal-tbody');
+    if (!tbody || !features || !features.length) return;
+
+    tbody.innerHTML = features.map(f => {
+      const p = f.properties || {};
+      const name = p.name || 'Unknown';
+      const state = p.state || '';
+      const bgT = p.temp_c !== undefined ? `${p.temp_c}°C` : '--';
+      const mlT = p.ml_temp_c !== undefined ? `${p.ml_temp_c}°C` : '--';
+      const anom = p.ml_anomaly_c !== undefined ? (p.ml_anomaly_c >= 0 ? `+${p.ml_anomaly_c}°C` : `${p.ml_anomaly_c}°C`) : '+0.0°C';
+      const wbgt = p.ml_wbgt_c !== undefined ? `${p.ml_wbgt_c}°C` : '--';
+      const drivers = (p.ml_drivers || []).map(d => `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200 mr-1 mb-1">${d.factor} (${d.impact_c})</span>`).join('') || '<span class="text-slate-400 italic">Nominal microclimate</span>';
+      const conf = p.ml_confidence || 'High';
+
+      return `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="py-2.5 px-3 font-bold text-slate-900 whitespace-nowrap">
+            ${name} <span class="text-[10px] text-slate-400 font-normal">(${state})</span>
+          </td>
+          <td class="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">${bgT}</td>
+          <td class="py-2.5 px-2 font-mono font-bold text-purple-900 whitespace-nowrap">${mlT}</td>
+          <td class="py-2.5 px-2 font-mono font-black text-amber-700 whitespace-nowrap">${anom}</td>
+          <td class="py-2.5 px-2 font-mono font-bold text-[#a43700] whitespace-nowrap">${wbgt}</td>
+          <td class="py-2.5 px-3 leading-relaxed">${drivers}</td>
+          <td class="py-2.5 px-2 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">${conf}</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openZoneInspection(p) {
+    const panel = document.getElementById('cell-inspection-panel');
+    if (!panel || !p) return;
+
+    // Header info
+    document.getElementById('inspect-cell-id').textContent = (p.name || 'ZONE').toUpperCase();
+    document.getElementById('inspect-cell-name').textContent = `${p.name || 'Municipal Center'}, ${p.state || ''}`;
+    document.getElementById('inspect-sector-desc').textContent = `Municipal Risk Zone (${(p.region_type || 'plains').toUpperCase()}) • Lat: ${p.latitude}, Lon: ${p.longitude}`;
+
+    // 1. REANALYSIS
+    const bgW = parsePropertyObject(p.background_weather) || {};
+    const airTemp = p.temp_c !== undefined ? p.temp_c : (bgW.temp_c || '--');
+    document.getElementById('inspect-bg-temp').textContent = `${airTemp} °C`;
+    document.getElementById('inspect-bg-rh').textContent = `${bgW.rh_pct !== undefined ? bgW.rh_pct : (p.thermal_stress && p.thermal_stress.rh_pct ? p.thermal_stress.rh_pct : '--')} %`;
+    document.getElementById('inspect-bg-wind').textContent = `${bgW.wind_ms !== undefined ? bgW.wind_ms : (p.thermal_stress && p.thermal_stress.wind_ms ? p.thermal_stress.wind_ms : '--')} m/s`;
+    document.getElementById('inspect-bg-solar').textContent = `${bgW.solar_wm2 !== undefined ? bgW.solar_wm2 : (p.thermal_stress && p.thermal_stress.solar_wm2 ? p.thermal_stress.solar_wm2 : '--')} W/m²`;
+
+    // 2. ML-PREDICTED
+    const mlTemp = p.ml_temp_c !== undefined ? p.ml_temp_c : (p.temp_c || '--');
+    document.getElementById('inspect-ml-temp').textContent = `${mlTemp} °C`;
+    const anomVal = p.ml_anomaly_c !== undefined ? p.ml_anomaly_c : 0.0;
+    const anomText = anomVal >= 0 ? `+${anomVal}°C UHI Anomaly` : `${anomVal}°C UHI Anomaly`;
+    document.getElementById('inspect-ml-anomaly').textContent = anomText;
+    document.getElementById('inspect-ml-version').textContent = p.ml_model_version || p.model_version || 'v1.0.0-rf';
+    document.getElementById('inspect-ml-conf').textContent = p.ml_confidence || p.confidence || 'High';
+
+    // 3. DETERMINISTIC WBGT & RISK
+    document.getElementById('inspect-wbgt-temp').textContent = `${p.wbgt_c || p.ml_wbgt_c || '--'} °C`;
+    document.getElementById('inspect-wbgt-band').textContent = p.thermal_stress_level || p.wbgt_band || '--';
+    document.getElementById('inspect-imd-status').textContent = p.imd_status || 'Normal';
+    const riskBadge = document.getElementById('inspect-risk-badge');
+    if (riskBadge) {
+      const alert = getAuthoritativeAlert(p);
+      riskBadge.textContent = alert === 'GREEN' ? 'NORMAL' : `${alert} ALERT (${p.base_risk || 'RISK'})`;
+      riskBadge.style.backgroundColor = getMarkerColor(alert);
+    }
+
+    // Drivers
+    const driversContainer = document.getElementById('inspect-drivers-container');
+    if (driversContainer) {
+      const drivers = parsePropertyObject(p.ml_drivers) || parsePropertyObject(p.major_drivers) || [];
+      if (Array.isArray(drivers) && drivers.length > 0) {
+        driversContainer.innerHTML = drivers.map(d => `
+          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-purple-950">${d.factor}</span>
+              <span class="font-mono text-[10px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">${d.impact_c}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">${d.detail || ''}</p>
+          </div>
+        `).join('');
+      } else {
+        driversContainer.innerHTML = '<div class="text-xs text-slate-400 italic col-span-full">Standard morphological baseline; no dominant anomaly driver.</div>';
+      }
+    }
+
+    document.getElementById('inspect-data-quality').textContent = p.weather_available === false ? 'Estimated Meteorological Inputs' : 'Verified Atmospheric Synoptic Input';
+    document.getElementById('inspect-observed-ref').textContent = `IMD Observational Ground Station Climatology (${p.name || 'National Network'})`;
+
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function openCellInspection(p) {
+    const panel = document.getElementById('cell-inspection-panel');
+    if (!panel || !p) return;
+
+    // Header info
+    document.getElementById('inspect-cell-id').textContent = p.cell_id || 'CELL-01';
+    document.getElementById('inspect-cell-name').textContent = p.name || `${p.city} Microclimate Cell`;
+    document.getElementById('inspect-sector-desc').textContent = `${p.sector_type || 'Urban Sector'} • Lat: ${p.latitude}, Lon: ${p.longitude}`;
+
+    // 1. REANALYSIS
+    const bgW = parsePropertyObject(p.background_weather) || {};
+    document.getElementById('inspect-bg-temp').textContent = `${p.background_temp_c || bgW.temp_c || '--'} °C`;
+    document.getElementById('inspect-bg-rh').textContent = `${bgW.rh_pct !== undefined ? bgW.rh_pct : '--'} %`;
+    document.getElementById('inspect-bg-wind').textContent = `${bgW.wind_ms !== undefined ? bgW.wind_ms : '--'} m/s`;
+    document.getElementById('inspect-bg-solar').textContent = `${bgW.solar_wm2 !== undefined ? bgW.solar_wm2 : '--'} W/m²`;
+
+    // 2. ML-PREDICTED
+    document.getElementById('inspect-ml-temp').textContent = `${p.ml_temp_c || '--'} °C`;
+    const anomVal = p.ml_anomaly_c !== undefined ? p.ml_anomaly_c : 0.0;
+    const anomText = anomVal >= 0 ? `+${anomVal}°C UHI Anomaly` : `${anomVal}°C UHI Anomaly`;
+    document.getElementById('inspect-ml-anomaly').textContent = anomText;
+    document.getElementById('inspect-ml-version').textContent = p.model_version || 'v1.0.0-rf';
+    document.getElementById('inspect-ml-conf').textContent = p.confidence || p.confidence_state || 'High';
+
+    // 3. DETERMINISTIC WBGT & RISK
+    document.getElementById('inspect-wbgt-temp').textContent = `${p.wbgt_c || '--'} °C`;
+    document.getElementById('inspect-wbgt-band').textContent = p.wbgt_band || '--';
+    document.getElementById('inspect-imd-status').textContent = p.imd_status || 'Normal';
+    const riskBadge = document.getElementById('inspect-risk-badge');
+    if (riskBadge) {
+      riskBadge.textContent = (p.risk_category || 'MODERATE').toUpperCase();
+      riskBadge.style.backgroundColor = p.risk_color || '#a43700';
+    }
+
+    // Drivers
+    const driversContainer = document.getElementById('inspect-drivers-container');
+    if (driversContainer) {
+      const drivers = parsePropertyObject(p.major_drivers) || [];
+      if (Array.isArray(drivers) && drivers.length > 0) {
+        driversContainer.innerHTML = drivers.map(d => `
+          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-purple-950">${d.factor}</span>
+              <span class="font-mono text-[10px] font-black text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">${d.impact_c}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">${d.detail || ''}</p>
+          </div>
+        `).join('');
+      } else {
+        driversContainer.innerHTML = '<div class="text-xs text-slate-400 italic col-span-full">Standard morphological baseline; no dominant anomaly driver.</div>';
+      }
+    }
+
+    document.getElementById('inspect-data-quality').textContent = p.data_quality || 'Verified Synoptic Input';
+    document.getElementById('inspect-observed-ref').textContent = `IMD Observational Ground Climatology (${p.city || 'Regional'})`;
+
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function closeCellInspection() {
+    const panel = document.getElementById('cell-inspection-panel');
+    if (panel) panel.classList.add('hidden');
+    if (map) {
+      if (map.getLayer('zones-selected-halo')) {
+        map.setFilter('zones-selected-halo', ['==', ['get', 'name'], '']);
+      }
+      if (map.getLayer('grid-cells-highlight')) {
+        map.setFilter('grid-cells-highlight', ['==', ['get', 'cell_id'], '']);
+      }
+    }
+    if (activePopup) {
+      activePopup.remove();
+      activePopup = null;
+    }
+  }
+
+  function showMapError(msg) {
+    const mapEl = document.getElementById('authority-map');
+    if (mapEl) {
+      const existing = mapEl.querySelector('.map-error-overlay');
+      if (existing) existing.remove();
+      const overlay = document.createElement('div');
+      overlay.className = 'map-error-overlay absolute inset-0 flex items-center justify-center bg-slate-50/90 z-[500] rounded-xl';
+      overlay.innerHTML = `<div class="text-center p-6"><svg class="w-8 h-8 text-amber-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><p class="text-sm font-bold text-slate-700">${msg}</p></div>`;
+      mapEl.style.position = 'relative';
+      mapEl.appendChild(overlay);
+    }
+  }
+
+  // Initialize on DOM load
+  document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    const params = new URLSearchParams(window.location.search);
+    const cityParam = params.get('city') || params.get('location');
+    if (cityParam) {
+      const citySelect = document.getElementById('city-focus-select');
+      if (citySelect) {
+        for (let i = 0; i < citySelect.options.length; i++) {
+          if (citySelect.options[i].value.toLowerCase() === cityParam.toLowerCase() || citySelect.options[i].text.toLowerCase().includes(cityParam.toLowerCase())) {
+            citySelect.selectedIndex = i;
+            const targetCity = citySelect.options[i].value;
+            if (map) {
+              if (map.loaded()) {
+                onCityFocusChange(targetCity);
+              } else {
+                map.on('load', () => {
+                  onCityFocusChange(targetCity);
+                });
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
+

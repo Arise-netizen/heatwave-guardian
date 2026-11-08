@@ -1,0 +1,866 @@
+{% extends "base.html" %}
+
+{% block title %}Alerts & Communications Command{% endblock %}
+
+{% block head %}
+<style>
+  .badge-pulse {
+    animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.95); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+  <!-- Header Banner -->
+  <div class="mb-8 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+    <div class="absolute -right-16 -top-16 w-64 h-64 bg-amber-50 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-200">
+            Step 7: Alert Intelligence
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+            5 Configurable Roles
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            EN • HI • MR Multilingual
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
+            Low-Bandwidth SMS (&le;160c)
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Alerts & Communications Command
+        </h1>
+        <p class="text-slate-600 text-sm mt-1 max-w-3xl">
+          Role-aware notifications translating validated heat-stress risks and occupational interventions into targeted communications.
+          Supports Human-in-the-Loop governance, reviewed Hindi and Marathi templates, low-connectivity SMS payloads, and quiet-hours consent management.
+        </p>
+      </div>
+
+      <!-- Live Provider Status Badge -->
+      <div class="flex-shrink-0 flex flex-col items-start md:items-end gap-1.5">
+        <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold {% if config.is_configured %}bg-emerald-50 text-emerald-800 border border-emerald-300{% else %}bg-slate-100 text-slate-800 border border-slate-300{% endif %}">
+          <span class="h-2.5 w-2.5 rounded-full {% if config.is_configured %}bg-emerald-500 badge-pulse{% else %}bg-amber-500{% endif %}"></span>
+          <span>{{ config.provider }}</span>
+        </div>
+        <span class="text-[11px] text-slate-500">
+          Governance: High-impact alerts default to Human Review
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Governance Metrics Row -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Alerts</p>
+        <p id="stat-total-alerts" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Across all roles</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg font-bold">
+        🔔
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-amber-200 shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-amber-800 uppercase tracking-wider">Pending Review</p>
+        <p id="stat-pending-alerts" class="text-2xl font-bold text-amber-700 mt-1">0</p>
+        <p class="text-[11px] text-amber-700 mt-0.5">Human approval required</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center text-lg font-bold">
+        ⏳
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-emerald-200 shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Dispatched / Simulated</p>
+        <p id="stat-dispatched-alerts" class="text-2xl font-bold text-emerald-700 mt-1">0</p>
+        <p class="text-[11px] text-emerald-700 mt-0.5">Audit-logged events</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-lg font-bold">
+        ✓
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-indigo-200 shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-indigo-800 uppercase tracking-wider">Quiet Hours Mode</p>
+        <p class="text-lg font-bold text-indigo-900 mt-1">22:00 – 06:00</p>
+        <p class="text-[11px] text-indigo-700 mt-0.5">Emergency bypass active</p>
+      </div>
+      <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center text-lg font-bold">
+        🌙
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Alert Generator Sandbox (Left) + Active Alerts & History (Right) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- LEFT: Interactive Generator & Multilingual Preview Sandbox (5 cols) -->
+    <div class="lg:col-span-5 space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span>⚡</span> Alert Synthesizer & Preview
+          </h2>
+          <span class="text-xs text-slate-500 font-mono">Live Generator</span>
+        </div>
+
+        <form id="alert-generator-form" class="space-y-4">
+          <!-- Location -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Location</label>
+            <div class="flex gap-2">
+              <select id="gen-city-select" class="w-full text-sm rounded-lg border-slate-300 focus:border-[#a43700] focus:ring-[#a43700] bg-slate-50 p-2 border">
+                {% for city in cities %}
+                  <option value="{{ city }}" {% if city == "Ahmedabad" %}selected{% endif %}>{{ city }}</option>
+                {% endfor %}
+              </select>
+              <button type="button" id="btn-fetch-weather" class="px-3 py-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg border border-slate-300 transition-colors whitespace-nowrap" title="Pull live weather for this location">
+                Sync Live
+              </button>
+            </div>
+          </div>
+
+          <!-- Role Matrix -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Role</label>
+            <select id="gen-role-select" class="w-full text-sm rounded-lg border-slate-300 focus:border-[#a43700] focus:ring-[#a43700] bg-slate-50 p-2 border">
+              <option value="worker">👷 Worker (Personal risk, hydration & rest pacing)</option>
+              <option value="supervisor" selected>👷‍♂️ Supervisor (Shift rotation, buddy checks & escalation)</option>
+              <option value="site_manager">🏗️ Site Manager (Operational stand-down & water logistics)</option>
+              <option value="authority">🏛️ Municipal Authority (HAP alert, ward cooling & public health)</option>
+              <option value="healthcare_facility">🏥 Healthcare Facility (Surge readiness; IV/cooling reserves)</option>
+              <option value="system_admin">💻 System Admin (Platform governance & emergency broadcast)</option>
+            </select>
+          </div>
+
+          <!-- Risk Level & Metrics -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Risk Level</label>
+              <select id="gen-risk-select" class="w-full text-sm rounded-lg border-slate-300 focus:border-[#a43700] focus:ring-[#a43700] bg-slate-50 p-2 border">
+                <option value="Low">Low Risk</option>
+                <option value="Moderate">Moderate Risk</option>
+                <option value="High">High Risk</option>
+                <option value="Very High" selected>Very High (Action Required)</option>
+                <option value="Extreme">Extreme (Stand-down / Emergency)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Language</label>
+              <select id="gen-lang-select" class="w-full text-sm rounded-lg border-slate-300 focus:border-[#a43700] focus:ring-[#a43700] bg-slate-50 p-2 border font-medium">
+                <option value="en" selected>English (en)</option>
+                <option value="hi">हिंदी (hi) — Hindi</option>
+                <option value="mr">मराठी (mr) — Marathi</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Thermal Readings -->
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Ambient °C</label>
+              <input type="number" id="gen-temp-c" value="41.5" step="0.1" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border font-mono">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">WBGT °C</label>
+              <input type="number" id="gen-wbgt-c" value="32.4" step="0.1" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border font-mono font-semibold text-[#a43700]">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Peak Window</label>
+              <input type="text" id="gen-peak-window" value="12:30–15:30" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border font-mono">
+            </div>
+          </div>
+
+          <!-- Channel & Pacing -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Channel</label>
+              <select id="gen-channel-select" class="w-full text-sm rounded-lg border-slate-300 bg-slate-50 p-2 border">
+                <option value="sms" selected>SMS (GSM Standard)</option>
+                <option value="whatsapp">WhatsApp (Rich Text)</option>
+                <option value="dashboard">Dashboard Notification</option>
+                <option value="email">Email</option>
+                <option value="webhook">Webhook API</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Work / Rest Pacing</label>
+              <div class="flex items-center gap-1.5 pt-1 text-xs">
+                <input type="number" id="gen-work-min" value="15" min="0" max="60" class="w-14 p-1.5 text-center border rounded bg-slate-50 font-mono">
+                <span class="text-slate-500">m work /</span>
+                <input type="number" id="gen-rest-min" value="45" min="0" max="60" class="w-14 p-1.5 text-center border rounded bg-slate-50 font-mono">
+                <span class="text-slate-500">m rest</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recipient Phone & Simulation Toggle -->
+          <div class="pt-1 border-t border-slate-100">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Test Recipient Phone</label>
+            <input type="text" id="gen-recipient-phone" value="+919876543210" placeholder="+919876543210" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border font-mono">
+            <div class="flex items-center justify-between mt-2">
+              <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-600">
+                <input type="checkbox" id="gen-is-simulated" class="rounded text-[#a43700] focus:ring-[#a43700]">
+                <span>Simulated Scenario (Prevents live transmission)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-3 pt-3">
+            <button type="button" id="btn-preview-alert" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors shadow-xs">
+              👁️ Refresh Preview
+            </button>
+            <button type="button" id="btn-create-alert-record" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-[#a43700] hover:bg-[#872e00] transition-colors shadow-xs">
+              ➕ Generate Alert
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Real-Time Live Preview Cards -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <span>📱</span> Live Message Formats
+          </h3>
+          <span id="preview-policy-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">
+            Review Required
+          </span>
+        </div>
+
+        <!-- Full Multilingual Alert -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-slate-700">Full Standard Layout</span>
+            <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('preview-full-text').innerText); alert('Full text copied to clipboard!');" class="text-[11px] text-[#a43700] hover:underline font-medium">Copy Text</button>
+          </div>
+          <div id="preview-full-text" class="p-3.5 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed border border-slate-800 min-h-[140px]">
+Loading preview...
+          </div>
+        </div>
+
+        <!-- Low-Connectivity Compact SMS (<160 chars) -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <span>📶</span> Low-Connectivity Compact SMS
+            </span>
+            <span id="preview-compact-count" class="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              0 / 160 chars (1 SMS)
+            </span>
+          </div>
+          <div id="preview-compact-text" class="p-3 bg-amber-50/70 border border-amber-200 text-amber-950 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed">
+Loading compact SMS...
+          </div>
+        </div>
+
+        <!-- Provenance Footer -->
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <span>Physics: Liljegren (2008) WBGT</span>
+          <span>Standards: NDMA / ISO 7243</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Active Alerts Governance Feed & Audit Trail (7 cols) -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- 5-Tier Chain of Command Escalation Hierarchy Card -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-5 shadow-sm border border-slate-700">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <span>⚡</span> Chain of Command Escalation Hierarchy
+          </span>
+          <span class="text-[11px] text-slate-300 font-mono">Level 1 ➔ Level 5</span>
+        </div>
+        <div class="grid grid-cols-5 gap-2 text-center text-xs">
+          <div class="p-2 rounded-xl bg-slate-800/90 border border-emerald-500/30">
+            <div class="font-extrabold text-emerald-400 text-[11px]">1. WORKER</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Advisory & Hydration</div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-800/90 border border-amber-500/30">
+            <div class="font-extrabold text-amber-400 text-[11px]">2. SUPERVISOR</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Shifts & Buddy Check</div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-800/90 border border-orange-500/30">
+            <div class="font-extrabold text-orange-400 text-[11px]">3. SITE MANAGER</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Stand-down & Tankers</div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-800/90 border border-red-500/30">
+            <div class="font-extrabold text-red-400 text-[11px]">4. AUTHORITY</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">HAP Alert & Shelters</div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-800/90 border border-purple-500/30">
+            <div class="font-extrabold text-purple-400 text-[11px]">5. SYSTEM ADMIN</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Governance & Telemetry</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Role Filter:</span>
+          <button type="button" onclick="filterByRole('')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white" data-role="">All</button>
+          <button type="button" onclick="filterByRole('worker')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200" data-role="worker">Worker</button>
+          <button type="button" onclick="filterByRole('supervisor')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200" data-role="supervisor">Supervisor</button>
+          <button type="button" onclick="filterByRole('site_manager')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200" data-role="site_manager">Site Manager</button>
+          <button type="button" onclick="filterByRole('authority')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200" data-role="authority">Authority</button>
+          <button type="button" onclick="filterByRole('healthcare_facility')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200" data-role="healthcare_facility">Health Facility</button>
+          <button type="button" onclick="filterByRole('system_admin')" class="role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200" data-role="system_admin">System Admin</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" id="btn-refresh-feed" class="px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+            ↻ Refresh Feed
+          </button>
+        </div>
+      </div>
+
+      <!-- Alerts List Feed Container -->
+      <div id="alerts-feed-container" class="space-y-4">
+        <!-- Rendered dynamically by JavaScript -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-500 text-sm">
+          Loading alerts intelligence feed...
+        </div>
+      </div>
+
+      <!-- Recipient Consent & Quiet Hours Settings Drawer -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span>🛡️</span> Recipient Consent & Quiet Hours Manager
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Configure recipient opt-in status, preferred language, and quiet notification hours.</p>
+          </div>
+          <span class="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            Privacy Protected
+          </span>
+        </div>
+
+        <form id="preferences-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Recipient ID / Phone</label>
+            <input type="text" id="pref-phone" value="+919876543210" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border font-mono">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Preferred Language</label>
+            <select id="pref-lang" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border">
+              <option value="en">English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+              <option value="mr">मराठी (Marathi)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Opt-In Consent</label>
+            <div class="flex items-center gap-2">
+              <select id="pref-optin" class="w-full text-xs rounded-lg border-slate-300 bg-slate-50 p-2 border">
+                <option value="true">OPTED IN (Active)</option>
+                <option value="false">OPTED OUT (Suppressed)</option>
+              </select>
+              <button type="button" id="btn-save-preferences" class="py-2 px-3 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors whitespace-nowrap">
+                Save
+              </button>
+            </div>
+          </div>
+        </form>
+        <p id="pref-feedback" class="hidden text-xs font-medium text-emerald-700 mt-2"></p>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+  let activeRoleFilter = '';
+  let cachedAlerts = [];
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const locParam = params.get('location') || params.get('city');
+    const riskParam = params.get('risk') || params.get('risk_category');
+    const roleParam = params.get('role');
+
+    if (locParam) {
+      const citySelect = document.getElementById('gen-city-select');
+      if (citySelect) {
+        for (let i = 0; i < citySelect.options.length; i++) {
+          if (citySelect.options[i].value.toLowerCase() === locParam.toLowerCase() || citySelect.options[i].text.toLowerCase().includes(locParam.toLowerCase())) {
+            citySelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    if (riskParam) {
+      const riskSelect = document.getElementById('gen-risk-select');
+      if (riskSelect) {
+        for (let i = 0; i < riskSelect.options.length; i++) {
+          if (riskSelect.options[i].value.toLowerCase() === riskParam.toLowerCase() || riskSelect.options[i].text.toLowerCase().includes(riskParam.toLowerCase())) {
+            riskSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    if (roleParam) {
+      const roleSelect = document.getElementById('gen-role-select');
+      if (roleSelect) {
+        for (let i = 0; i < roleSelect.options.length; i++) {
+          if (roleSelect.options[i].value.toLowerCase() === roleParam.toLowerCase() || roleSelect.options[i].text.toLowerCase().includes(roleParam.toLowerCase())) {
+            roleSelect.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    updatePreview();
+    loadAlertsFeed();
+
+    document.getElementById('btn-preview-alert').addEventListener('click', updatePreview);
+    document.getElementById('btn-create-alert-record').addEventListener('click', createAlert);
+    document.getElementById('btn-refresh-feed').addEventListener('click', loadAlertsFeed);
+    document.getElementById('btn-save-preferences').addEventListener('click', savePreferences);
+    document.getElementById('btn-fetch-weather').addEventListener('click', syncLiveWeather);
+
+    // Auto-update preview on select changes
+    ['gen-city-select', 'gen-role-select', 'gen-risk-select', 'gen-lang-select', 'gen-channel-select'].forEach(id => {
+      document.getElementById(id).addEventListener('change', updatePreview);
+    });
+  });
+
+  async function updatePreview() {
+    const payload = {
+      location: document.getElementById('gen-city-select').value,
+      role: document.getElementById('gen-role-select').value,
+      risk_category: document.getElementById('gen-risk-select').value,
+      language: document.getElementById('gen-lang-select').value,
+      channel: document.getElementById('gen-channel-select').value,
+      temp_c: parseFloat(document.getElementById('gen-temp-c').value) || 40.0,
+      wbgt_c: parseFloat(document.getElementById('gen-wbgt-c').value) || 31.5,
+      work_minutes: parseInt(document.getElementById('gen-work-min').value) || 30,
+      rest_minutes: parseInt(document.getElementById('gen-rest-min').value) || 30,
+      peak_window: document.getElementById('gen-peak-window').value,
+      is_simulated: document.getElementById('gen-is-simulated').checked
+    };
+
+    try {
+      const resp = await fetch('/api/alerts/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        document.getElementById('preview-full-text').innerText = data.full_message;
+        document.getElementById('preview-compact-text').innerText = data.compact_sms;
+        
+        const count = data.compact_char_count || data.compact_sms.length;
+        const segment = count <= 160 ? '1 SMS segment' : Math.ceil(count / 153) + ' SMS segments';
+        const countBadge = document.getElementById('preview-compact-count');
+        countBadge.innerText = `${count} / 160 chars (${segment})`;
+        countBadge.className = count <= 160
+          ? 'text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200'
+          : 'text-[11px] font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200';
+
+        const policyBadge = document.getElementById('preview-policy-badge');
+        if (data.policy.requires_human_approval) {
+          policyBadge.innerText = 'Approval Mandatory';
+          policyBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200';
+        } else {
+          policyBadge.innerText = 'Direct Dispatch Eligible';
+          policyBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200';
+        }
+      }
+    } catch (e) {
+      console.error('Preview error:', e);
+    }
+  }
+
+  async function createAlert() {
+    const btn = document.getElementById('btn-create-alert-record');
+    btn.disabled = true;
+    btn.innerText = 'Generating...';
+
+    const payload = {
+      location: document.getElementById('gen-city-select').value,
+      role: document.getElementById('gen-role-select').value,
+      risk: document.getElementById('gen-risk-select').value,
+      language: document.getElementById('gen-lang-select').value,
+      channel: document.getElementById('gen-channel-select').value,
+      temp_c: parseFloat(document.getElementById('gen-temp-c').value) || 40.0,
+      wbgt_c: parseFloat(document.getElementById('gen-wbgt-c').value) || 31.5,
+      work_minutes: parseInt(document.getElementById('gen-work-min').value) || 30,
+      rest_minutes: parseInt(document.getElementById('gen-rest-min').value) || 30,
+      peak_window: document.getElementById('gen-peak-window').value,
+      is_simulated: document.getElementById('gen-is-simulated').checked,
+      roles: [document.getElementById('gen-role-select').value]
+    };
+
+    try {
+      const resp = await fetch('/api/alerts/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        loadAlertsFeed();
+      } else {
+        alert('Failed to generate alert: ' + (data.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Error creating alert: ' + e);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = '➕ Generate Alert';
+    }
+  }
+
+  async function loadAlertsFeed() {
+    const container = document.getElementById('alerts-feed-container');
+    try {
+      const url = activeRoleFilter ? `/api/alerts?role=${encodeURIComponent(activeRoleFilter)}` : '/api/alerts';
+      const resp = await fetch(url);
+      const data = await resp.json();
+      
+      if (!resp.ok) {
+        container.innerHTML = `<div class="p-6 bg-red-50 text-red-800 rounded-xl text-sm border border-red-200">Failed to load alerts feed.</div>`;
+        return;
+      }
+
+      cachedAlerts = data.alerts || [];
+      renderFeed(cachedAlerts);
+      updateTopCounters(cachedAlerts);
+
+    } catch (e) {
+      container.innerHTML = `<div class="p-6 bg-red-50 text-red-800 rounded-xl text-sm border border-red-200">Error connecting to alerts service: ${e}</div>`;
+    }
+  }
+
+  function updateTopCounters(alerts) {
+    document.getElementById('stat-total-alerts').innerText = alerts.length;
+    const pending = alerts.filter(a => a.approval_state === 'PENDING').length;
+    document.getElementById('stat-pending-alerts').innerText = pending;
+    const dispatched = alerts.filter(a => ['DELIVERED', 'SIMULATED'].includes(a.status)).length;
+    document.getElementById('stat-dispatched-alerts').innerText = dispatched;
+  }
+
+  function filterByRole(role) {
+    activeRoleFilter = role;
+    document.querySelectorAll('.role-filter-btn').forEach(btn => {
+      if (btn.getAttribute('data-role') === role) {
+        btn.className = 'role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white';
+      } else {
+        btn.className = 'role-filter-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200';
+      }
+    });
+    loadAlertsFeed();
+  }
+
+  function renderFeed(alerts) {
+    const container = document.getElementById('alerts-feed-container');
+    if (!alerts || alerts.length === 0) {
+      container.innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500">
+          <div class="text-3xl mb-2">📋</div>
+          <p class="font-bold text-slate-800 text-sm">No alerts recorded in this filter view.</p>
+          <p class="text-xs text-slate-500 mt-1">Use the synthesizer panel on the left to generate new role-specific alerts.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = alerts.map(a => {
+      const isPending = a.approval_state === 'PENDING';
+      const isApproved = a.approval_state === 'APPROVED' || a.approval_state === 'NOT_REQUIRED';
+      const isRejected = a.approval_state === 'REJECTED';
+      const isDispatched = ['DELIVERED', 'SIMULATED'].includes(a.status);
+
+      let urgencyColor = 'bg-slate-100 text-slate-800 border-slate-200';
+      if (a.urgency === 'Critical') urgencyColor = 'bg-purple-100 text-purple-900 border-purple-200';
+      else if (a.urgency === 'High') urgencyColor = 'bg-red-100 text-red-900 border-red-200';
+      else if (a.urgency === 'Moderate') urgencyColor = 'bg-amber-100 text-amber-900 border-amber-200';
+      else if (a.urgency === 'Low') urgencyColor = 'bg-emerald-100 text-emerald-900 border-emerald-200';
+
+      let statusColor = 'bg-slate-100 text-slate-700';
+      if (isPending) statusColor = 'bg-amber-100 text-amber-900 border border-amber-300';
+      else if (isDispatched) statusColor = 'bg-emerald-100 text-emerald-900 border border-emerald-300';
+      else if (isRejected) statusColor = 'bg-red-100 text-red-900 border border-red-300';
+
+      const roleBadge = a.role.toUpperCase().replace('_', ' ');
+
+      return `
+        <div class="bg-white rounded-2xl border ${isPending ? 'border-amber-300 shadow-sm' : 'border-slate-200 shadow-xs'} p-5 transition-all">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800 border border-slate-300 font-mono">
+                ${a.alert_id}
+              </span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-[#fff5f0] text-[#a43700] border border-[#f0ded6]">
+                ${roleBadge}
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${urgencyColor} border">
+                ${a.urgency} Urgency
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                ${a.language.toUpperCase()} • ${a.channel.toUpperCase()}
+              </span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${statusColor}">
+                ${a.status.replace('_', ' ')}
+              </span>
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-600 mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span><strong>Location:</strong> ${a.location}</span>
+            <span><strong>Risk:</strong> ${a.risk}</span>
+            <span><strong>Peak:</strong> ${a.peak_window}</span>
+            <span><strong>WBGT:</strong> ${a.wbgt_c}°C</span>
+            <span><strong>Pacing:</strong> ${a.work_minutes}m work / ${a.rest_minutes}m rest</span>
+            ${a.is_simulated ? '<span class="text-amber-800 font-bold bg-amber-50 px-1 rounded">[SIMULATED]</span>' : ''}
+          </div>
+
+          <!-- Message Box -->
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 whitespace-pre-wrap leading-relaxed mb-3">
+${a.full_message}
+          </div>
+
+          <!-- Compact Preview Accordion / Bar -->
+          <div class="text-[11px] bg-amber-50/60 border border-amber-200 text-amber-950 p-2.5 rounded-lg font-mono mb-3">
+            <span class="font-bold">Compact SMS:</span> ${a.compact_message}
+          </div>
+
+          <!-- Footer Actions & Audit History -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+            <button type="button" onclick="toggleAuditTrail('${a.alert_id}')" class="text-xs text-slate-500 hover:text-slate-800 font-medium">
+              📜 View Audit Trail (${a.audit_trail ? a.audit_trail.length : 1} events)
+            </button>
+
+            <div class="flex items-center gap-2">
+              ${(a.role !== 'system_admin' && !isRejected) ? `
+                <button type="button" onclick="escalateAlert('${a.alert_id}')" class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-colors shadow-xs flex items-center gap-1" title="Escalate this alert up the chain of command">
+                  <span>⚡</span> Escalate
+                </button>
+              ` : ''}
+
+              ${isPending ? `
+                <button type="button" onclick="approveAlert('${a.alert_id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs">
+                  ✓ Approve Alert
+                </button>
+                <button type="button" onclick="rejectAlert('${a.alert_id}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs">
+                  ✗ Reject
+                </button>
+              ` : ''}
+
+              ${(isApproved && !isDispatched) ? `
+                <button type="button" onclick="dispatchAlert('${a.alert_id}')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors shadow-xs">
+                  🚀 Dispatch Now
+                </button>
+              ` : ''}
+
+              ${isDispatched ? `
+                <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+                  <span>✓</span> Logged to Provider Trail
+                </span>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Collapsible Audit Trail Drawer -->
+          <div id="audit-drawer-${a.alert_id}" class="hidden mt-3 p-3 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono space-y-1.5">
+            <div class="font-bold text-amber-400 border-b border-slate-800 pb-1 mb-1">Audit Trail & Provenance</div>
+            ${(a.audit_trail || []).map(e => `
+              <div class="flex items-start justify-between text-[11px]">
+                <span class="text-slate-400">[${e.timestamp ? e.timestamp.slice(11, 19) : ''}] <strong>${e.action}</strong> by ${e.actor}:</span>
+                <span class="text-slate-300 ml-2">${e.details || ''}</span>
+              </div>
+            `).join('')}
+            <div class="pt-1 text-[10px] text-slate-500 border-t border-slate-800 mt-1">
+              Model: ${a.model_version || '2.4.0'} | Quality: ${a.data_quality || 'VALIDATED'}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleAuditTrail(alertId) {
+    const el = document.getElementById(`audit-drawer-${alertId}`);
+    if (el) el.classList.toggle('hidden');
+  }
+
+  async function approveAlert(alertId) {
+    const approver = prompt('Enter your name or operational title to authorize this alert:', 'Shift Supervisor');
+    if (!approver) return;
+
+    try {
+      const resp = await fetch(`/api/alerts/${encodeURIComponent(alertId)}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approver: approver, notes: 'Authorized via Operations Command UI' })
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        loadAlertsFeed();
+      } else {
+        alert('Approval failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Error during approval: ' + e);
+    }
+  }
+
+  async function rejectAlert(alertId) {
+    const reason = prompt('Please enter the reason for rejecting this alert:', 'Thermal conditions moderated');
+    if (reason === null) return;
+
+    try {
+      const resp = await fetch(`/api/alerts/${encodeURIComponent(alertId)}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rejected_by: 'Supervisor', reason: reason })
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        loadAlertsFeed();
+      } else {
+        alert('Rejection failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Error during rejection: ' + e);
+    }
+  }
+
+  async function escalateAlert(alertId) {
+    const reason = prompt('Reason for escalation up the chain of command:', 'Thermal risk exceeded on-site mitigation capacity');
+    if (!reason) return;
+    const actor = prompt('Enter your name or operational title:', 'Shift Supervisor');
+    if (!actor) return;
+
+    try {
+      const resp = await fetch(`/api/alerts/${encodeURIComponent(alertId)}/escalate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ escalated_by: actor, reason: reason })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        alert(data.message || 'Alert successfully escalated!');
+        loadAlertsFeed();
+      } else {
+        alert('Escalation failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Error during escalation: ' + e);
+    }
+  }
+
+  async function dispatchAlert(alertId) {
+    const phone = prompt('Confirm target recipient phone number:', '+919876543210');
+    if (!phone) return;
+
+    try {
+      const resp = await fetch(`/api/alerts/${encodeURIComponent(alertId)}/dispatch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, force: false })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        alert(data.message || 'Alert dispatched successfully!');
+        loadAlertsFeed();
+      } else {
+        alert('Dispatch suppressed or failed: ' + (data.error || data.message || data.status));
+        loadAlertsFeed();
+      }
+    } catch (e) {
+      alert('Error during dispatch: ' + e);
+    }
+  }
+
+  async function savePreferences() {
+    const phone = document.getElementById('pref-phone').value.trim();
+    const lang = document.getElementById('pref-lang').value;
+    const optedIn = document.getElementById('pref-optin').value === 'true';
+
+    try {
+      const resp = await fetch('/api/alerts/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phone,
+          preferred_language: lang,
+          opted_in: optedIn,
+          quiet_hours: { enabled: true, start: '22:00', end: '06:00' }
+        })
+      });
+      const data = await resp.json();
+      const fb = document.getElementById('pref-feedback');
+      fb.classList.remove('hidden');
+      if (resp.ok && data.success) {
+        fb.className = 'text-xs font-medium text-emerald-700 mt-2';
+        fb.innerText = `Preferences saved for ${data.preferences.recipient_id_masked}. Consent: ${data.preferences.consent_status}.`;
+      } else {
+        fb.className = 'text-xs font-medium text-red-700 mt-2';
+        fb.innerText = 'Failed to save preferences: ' + (data.error || 'Invalid input');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function syncLiveWeather() {
+    const city = document.getElementById('gen-city-select').value;
+    const btn = document.getElementById('btn-fetch-weather');
+    btn.disabled = true;
+    btn.innerText = 'Syncing...';
+
+    try {
+      const resp = await fetch(`/api/current-weather?city=${encodeURIComponent(city)}`);
+      const data = await resp.json();
+      if (resp.ok && data.temp_c !== undefined) {
+        document.getElementById('gen-temp-c').value = data.temp_c.toFixed(1);
+        if (data.wbgt_c !== undefined) {
+          document.getElementById('gen-wbgt-c').value = data.wbgt_c.toFixed(1);
+        }
+        if (data.risk_category) {
+          document.getElementById('gen-risk-select').value = data.risk_category;
+        }
+        updatePreview();
+      }
+    } catch (e) {
+      console.warn('Weather sync failed:', e);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Sync Live';
+    }
+  }
+</script>
+{% endblock %}

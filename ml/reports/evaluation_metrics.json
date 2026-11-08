@@ -1,0 +1,217 @@
+{
+  "model_type": "RandomForestRegressor",
+  "model_version": "v1.1.0-rf-residual",
+  "scientific_status": "PROTOTYPE_BENCHMARK_SYNTHETIC_LABELS_NOT_FOR_SCIENTIFIC_CLAIMS",
+  "evaluation_dataset": "Indian Paired Dataset (2024 Test Set)",
+  "sample_count": 910,
+  "metrics": {
+    "random_forest": {
+      "mae_c": 0.044,
+      "rmse_c": 0.059,
+      "mean_bias_c": -0.003,
+      "r2_score": 0.9998,
+      "sample_count": 910
+    },
+    "linear_baseline": {
+      "mae_c": 0.032,
+      "rmse_c": 0.049,
+      "mean_bias_c": 0.003,
+      "r2_score": 0.9999,
+      "sample_count": 910
+    },
+    "reanalysis_transfer_baseline": {
+      "mae_c": 1.148,
+      "rmse_c": 1.174,
+      "mean_bias_c": -1.148,
+      "r2_score": 0.9329,
+      "sample_count": 910
+    },
+    "climatological_bias_baseline": {
+      "mae_c": 0.191,
+      "rmse_c": 0.245,
+      "mean_bias_c": 0.02,
+      "r2_score": 0.9971,
+      "sample_count": 910
+    }
+  },
+  "residual_target_metrics": {
+    "random_forest": {
+      "mae_c": 0.044,
+      "rmse_c": 0.059,
+      "mean_bias_c": -0.003,
+      "r2_score": 0.9416,
+      "sample_count": 910
+    },
+    "linear_baseline": {
+      "mae_c": 0.032,
+      "rmse_c": 0.049,
+      "mean_bias_c": 0.003,
+      "r2_score": 0.9605,
+      "sample_count": 910
+    },
+    "reanalysis_transfer_baseline": {
+      "mae_c": 1.148,
+      "rmse_c": 1.174,
+      "mean_bias_c": -1.148,
+      "r2_score": -22.0559,
+      "sample_count": 910
+    },
+    "climatological_bias_baseline": {
+      "mae_c": 0.191,
+      "rmse_c": 0.245,
+      "mean_bias_c": 0.02,
+      "r2_score": -0.0069,
+      "sample_count": 910
+    }
+  },
+  "baseline_comparisons": {
+    "over_zero_anomaly": {
+      "delta_mae_c": 1.104,
+      "pct_improvement_mae": 96.2,
+      "delta_rmse_c": 1.115,
+      "pct_improvement_rmse": 95.0,
+      "meaningful_improvement": true
+    },
+    "over_climatological_bias": {
+      "delta_mae_c": 0.147,
+      "pct_improvement_mae": 77.0,
+      "delta_rmse_c": 0.186,
+      "pct_improvement_rmse": 75.9,
+      "meaningful_improvement": true
+    },
+    "over_linear_regression": {
+      "delta_mae_c": -0.012,
+      "pct_improvement_mae": -37.5,
+      "delta_rmse_c": -0.01,
+      "pct_improvement_rmse": -20.4,
+      "meaningful_improvement": false
+    }
+  },
+  "per_city_metrics": {
+    "Ahmedabad": {
+      "mae_c": 0.046,
+      "rmse_c": 0.057,
+      "mean_bias_c": -0.039,
+      "r2_score": 0.9003,
+      "sample_count": 91
+    },
+    "Bengaluru": {
+      "mae_c": 0.051,
+      "rmse_c": 0.062,
+      "mean_bias_c": 0.001,
+      "r2_score": 0.9116,
+      "sample_count": 91
+    },
+    "Delhi": {
+      "mae_c": 0.026,
+      "rmse_c": 0.031,
+      "mean_bias_c": -0.004,
+      "r2_score": 0.9567,
+      "sample_count": 91
+    },
+    "Hyderabad": {
+      "mae_c": 0.037,
+      "rmse_c": 0.043,
+      "mean_bias_c": 0.012,
+      "r2_score": 0.9658,
+      "sample_count": 91
+    },
+    "Jaipur": {
+      "mae_c": 0.031,
+      "rmse_c": 0.038,
+      "mean_bias_c": 0.001,
+      "r2_score": 0.9391,
+      "sample_count": 91
+    },
+    "Khammam": {
+      "mae_c": 0.059,
+      "rmse_c": 0.073,
+      "mean_bias_c": 0.055,
+      "r2_score": 0.7483,
+      "sample_count": 91
+    },
+    "Kolkata": {
+      "mae_c": 0.101,
+      "rmse_c": 0.113,
+      "mean_bias_c": -0.091,
+      "r2_score": 0.8051,
+      "sample_count": 91
+    },
+    "Lucknow": {
+      "mae_c": 0.026,
+      "rmse_c": 0.035,
+      "mean_bias_c": 0.008,
+      "r2_score": 0.933,
+      "sample_count": 91
+    },
+    "Mumbai": {
+      "mae_c": 0.025,
+      "rmse_c": 0.041,
+      "mean_bias_c": 0.005,
+      "r2_score": 0.8656,
+      "sample_count": 91
+    },
+    "Pune": {
+      "mae_c": 0.042,
+      "rmse_c": 0.052,
+      "mean_bias_c": 0.02,
+      "r2_score": 0.8868,
+      "sample_count": 91
+    }
+  },
+  "feature_importances": [
+    {
+      "feature": "background_wind_ms",
+      "importance": 0.3517
+    },
+    {
+      "feature": "background_solar_wm2",
+      "importance": 0.2568
+    },
+    {
+      "feature": "urban_built_up_ratio",
+      "importance": 0.1701
+    },
+    {
+      "feature": "is_coastal",
+      "importance": 0.1431
+    },
+    {
+      "feature": "population_density_k",
+      "importance": 0.0314
+    },
+    {
+      "feature": "distance_to_coast_km",
+      "importance": 0.0218
+    },
+    {
+      "feature": "day_of_year_cos",
+      "importance": 0.0069
+    },
+    {
+      "feature": "elevation_m",
+      "importance": 0.0048
+    },
+    {
+      "feature": "background_rh_pct",
+      "importance": 0.0042
+    },
+    {
+      "feature": "day_of_year_sin",
+      "importance": 0.0041
+    },
+    {
+      "feature": "background_temp_c",
+      "importance": 0.0039
+    },
+    {
+      "feature": "vegetation_canopy_deficit",
+      "importance": 0.0011
+    }
+  ],
+  "empirical_uncertainty": {
+    "method": "Empirical Conformal Quantile of Held-Out Residuals",
+    "ci_90_half_width_c": 0.1,
+    "measured_test_coverage_pct": 90.0
+  }
+}

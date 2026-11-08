@@ -1,0 +1,837 @@
+{% extends "base.html" %}
+
+{% block title %}What-If Simulator & Decision Timeline — HeatWave Guardian{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-7xl mx-auto pb-12">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-5">
+    <div>
+      <div class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[#a43700] font-bold mb-1">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-[#fff5f0] text-[#a43700] border border-[#f0ded6]">
+          SIMULATED SCENARIO
+        </span>
+        <span>•</span>
+        <span>Deterministic Occupational & Environmental Modeling</span>
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
+        What-If Heat Exposure Simulator & Decision Timeline
+      </h1>
+      <p class="text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+        Test counterfactual environmental shifts (heat surge, humidity, solar shielding) and workplace exposure controls (pacing, shaded/conditioned recovery, clothing adjustments) to forecast operational risk and work-rest transitions.
+      </p>
+    </div>
+
+    <!-- Quick Presets -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Presets:</span>
+      <div class="flex flex-wrap gap-1.5">
+        <button type="button" onclick="loadSimulationPreset('construction_shade')"
+                class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors">
+          1. Construction + Shade
+        </button>
+        <button type="button" onclick="loadSimulationPreset('heatwave_surge')"
+                class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors">
+          2. Heatwave Surge (+4°C)
+        </button>
+        <button type="button" onclick="loadSimulationPreset('early_shift')"
+                class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors">
+          3. Early Shift (06:00 Start)
+        </button>
+        <button type="button" onclick="loadSimulationPreset('ppe_mitigation')"
+                class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition-colors">
+          4. PPE → Breathable
+        </button>
+        <button type="button" onclick="loadSimulationPreset('intervention_avoid_peak')"
+                class="px-2.5 py-1.5 rounded-lg bg-[#fff5f0] hover:bg-[#ffece2] border border-[#f0ded6] text-xs font-bold text-[#a43700] shadow-2xs transition-colors">
+          5. Intervention (Avoid Peak & Shade)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Out of Validated Range Warning Banner (Hidden by default, shown when out-of-range) -->
+  <div id="sim-validation-alert" class="hidden p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 shadow-sm transition-all">
+    <div class="flex items-start space-x-3">
+      <span class="text-xl">⚠️</span>
+      <div class="space-y-1">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-amber-900">Extrapolated Hypothetical Condition (Validation Guardrail)</h2>
+        <p id="sim-validation-text" class="text-xs text-amber-800 leading-relaxed"></p>
+        <p class="text-[11px] text-amber-700 italic">Scientific Data Honesty: Predictions outside validated bounds are marked as unvalidated estimates. Confidence claims are suppressed.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Simulator Layout (Form & Results) -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    
+    <!-- Controls Form (5 cols on lg) -->
+    <div class="lg:col-span-5 card p-6 bg-white border border-slate-200 shadow-sm space-y-6">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Scenario Levers & Adjustments</h2>
+          <p class="text-xs text-slate-500">Tune meteorological forcing and operational exposure</p>
+        </div>
+        
+        <!-- Multi-Scenario Toggle -->
+        <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold">
+          <button type="button" id="btn-mode-single" onclick="setScenarioMode('single')"
+                  class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-[#a43700] shadow-xs">
+            A Only
+          </button>
+          <button type="button" id="btn-mode-multi" onclick="setScenarioMode('multi')"
+                  class="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900">
+            A vs B
+          </button>
+        </div>
+      </div>
+
+      <form id="simulator-form" class="space-y-5">
+        
+        <!-- Location Selection -->
+        <div>
+          <label for="sim-location" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Corridor / Location (India)
+          </label>
+          <select id="sim-location" onchange="syncLocationWeather()" class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-[#a43700] focus:ring-1 focus:ring-[#a43700]">
+            {% for city in cities %}
+            <option value="{{ city }}" {% if city == 'Hyderabad' %}selected{% endif %}>{{ city }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- 1. ENVIRONMENTAL FORCING LEVERS -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <span class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
+              <span>🌦️</span>
+              <span>1. Environmental Forcing (Meteorology)</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">Ambient State</span>
+          </div>
+
+          <!-- Ambient Dry-Bulb Temperature -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <label for="sim-temp" class="font-bold text-slate-700">Ambient Dry-Bulb Temperature (°C)</label>
+              <span id="sim-temp-display" class="font-mono font-bold text-[#a43700]">38.0°C</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <input type="range" id="sim-temp" min="15.0" max="52.0" step="0.5" value="38.0"
+                     oninput="updateSliderDisplay('sim-temp', 'sim-temp-display', '°C')"
+                     class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#a43700]">
+              <input type="number" id="sim-temp-num" min="10" max="60" step="0.5" value="38.0"
+                     oninput="updateNumberInput('sim-temp', this.value)"
+                     class="w-16 px-2 py-1 text-xs font-mono font-bold text-center border border-slate-300 rounded-md">
+            </div>
+          </div>
+
+          <!-- Relative Humidity -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <label for="sim-rh" class="font-bold text-slate-700">Relative Humidity (%)</label>
+              <span id="sim-rh-display" class="font-mono font-bold text-[#a43700]">45%</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <input type="range" id="sim-rh" min="10" max="95" step="1" value="45"
+                     oninput="updateSliderDisplay('sim-rh', 'sim-rh-display', '%')"
+                     class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#a43700]">
+              <input type="number" id="sim-rh-num" min="5" max="100" step="1" value="45"
+                     oninput="updateNumberInput('sim-rh', this.value)"
+                     class="w-16 px-2 py-1 text-xs font-mono font-bold text-center border border-slate-300 rounded-md">
+            </div>
+          </div>
+
+          <!-- Wind Speed & Solar Radiation (Two columns) -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <label for="sim-wind" class="text-[11px] font-bold text-slate-700 block">Wind Speed (m/s)</label>
+              <input type="number" id="sim-wind" min="0.1" max="25.0" step="0.5" value="2.0"
+                     class="w-full px-2.5 py-1.5 text-xs font-mono border border-slate-300 rounded-lg bg-white">
+            </div>
+            <div class="space-y-1">
+              <label for="sim-solar" class="text-[11px] font-bold text-slate-700 block">Solar Radiation (W/m²)</label>
+              <input type="number" id="sim-solar" min="0" max="1200" step="50" value="650"
+                     class="w-full px-2.5 py-1.5 text-xs font-mono border border-slate-300 rounded-lg bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. OCCUPATIONAL EXPOSURE LEVERS -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <span class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
+              <span>👷</span>
+              <span>2. Exposure & Operational Schedule</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">Workplace Context</span>
+          </div>
+
+          <!-- Work Start Time & Shift Duration -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="sim-start-time" class="text-[11px] font-bold text-slate-700 block mb-1">Work Start Time</label>
+              <select id="sim-start-time" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800">
+                <option value="06:00">06:00 AM (Early Shift)</option>
+                <option value="07:00">07:00 AM</option>
+                <option value="08:00" selected>08:00 AM (Standard)</option>
+                <option value="09:00">09:00 AM</option>
+                <option value="10:00">10:00 AM (Late Start)</option>
+              </select>
+            </div>
+            <div>
+              <label for="sim-duration" class="text-[11px] font-bold text-slate-700 block mb-1">Exposure Duration</label>
+              <select id="sim-duration" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-800">
+                <option value="2.0">2 Hours (Brief)</option>
+                <option value="4.0">4 Hours (Half Shift)</option>
+                <option value="6.0" selected>6 Hours</option>
+                <option value="8.0">8 Hours (Full Shift)</option>
+                <option value="10.0">10 Hours (Extended)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Work Intensity (Baseline vs Scenario A) -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label for="sim-base-workload" class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Baseline Work</label>
+              <select id="sim-base-workload" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800">
+                <option value="light">Light Work (~150W)</option>
+                <option value="moderate">Moderate Work (~250W)</option>
+                <option value="heavy" selected>Heavy Work (~380W)</option>
+                <option value="very_heavy">Very Heavy (~500W)</option>
+              </select>
+            </div>
+            <div>
+              <label for="sim-target-workload" class="text-[10px] font-bold uppercase text-[#a43700] block mb-1">Scenario A Work</label>
+              <select id="sim-target-workload" class="w-full rounded-lg border border-[#a43700]/50 bg-white px-2.5 py-1.5 text-xs text-slate-900 font-semibold ring-1 ring-[#a43700]/20">
+                <option value="light" selected>Light (Paced ~150W)</option>
+                <option value="moderate">Moderate Work (~250W)</option>
+                <option value="heavy">Heavy Work (~380W)</option>
+                <option value="very_heavy">Very Heavy (~500W)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Recovery Setting -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="sim-base-recovery" class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Baseline Recovery</label>
+              <select id="sim-base-recovery" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800">
+                <option value="outdoor_direct" selected>Direct Sun / Outdoor</option>
+                <option value="warm_indoor">Warm Unconditioned</option>
+                <option value="shade">Shaded Canopy</option>
+                <option value="cool_indoor">Cool Indoor / AC</option>
+              </select>
+            </div>
+            <div>
+              <label for="sim-target-recovery" class="text-[10px] font-bold uppercase text-[#a43700] block mb-1">Scenario A Recovery</label>
+              <select id="sim-target-recovery" class="w-full rounded-lg border border-[#a43700]/50 bg-white px-2.5 py-1.5 text-xs text-slate-900 font-semibold ring-1 ring-[#a43700]/20">
+                <option value="outdoor_direct">Direct Sun / Outdoor</option>
+                <option value="warm_indoor">Warm Unconditioned</option>
+                <option value="shade">Shaded Canopy</option>
+                <option value="cool_indoor" selected>Cool Indoor / AC</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Clothing / PPE -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="sim-base-clothing" class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Baseline Gear</label>
+              <select id="sim-base-clothing" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800">
+                <option value="light">Light Cotton</option>
+                <option value="heavy">Heavy Workwear</option>
+                <option value="ppe" selected>Protective PPE / Impermeable</option>
+              </select>
+            </div>
+            <div>
+              <label for="sim-target-clothing" class="text-[10px] font-bold uppercase text-[#a43700] block mb-1">Scenario A Gear</label>
+              <select id="sim-target-clothing" class="w-full rounded-lg border border-[#a43700]/50 bg-white px-2.5 py-1.5 text-xs text-slate-900 font-semibold ring-1 ring-[#a43700]/20">
+                <option value="light" selected>Light Breathable Cotton</option>
+                <option value="heavy">Heavy Workwear</option>
+                <option value="ppe">Protective PPE / Impermeable</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Acclimatization Status -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="sim-base-exp" class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Baseline Acclimatization</label>
+              <select id="sim-base-exp" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800">
+                <option value="not_used" selected>Unacclimatized (New)</option>
+                <option value="somewhat_used">Partially Acclimatized</option>
+                <option value="very_used">Fully Acclimatized</option>
+              </select>
+            </div>
+            <div>
+              <label for="sim-target-exp" class="text-[10px] font-bold uppercase text-[#a43700] block mb-1">Scenario A Acclimatization</label>
+              <select id="sim-target-exp" class="w-full rounded-lg border border-[#a43700]/50 bg-white px-2.5 py-1.5 text-xs text-slate-900 font-semibold ring-1 ring-[#a43700]/20">
+                <option value="not_used">Unacclimatized (New)</option>
+                <option value="somewhat_used">Partially Acclimatized</option>
+                <option value="very_used" selected>Fully Acclimatized</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <button type="submit" id="sim-run-btn"
+                class="w-full flex items-center justify-center space-x-2 bg-[#a43700] hover:bg-[#872e00] text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all text-sm group cursor-pointer">
+          <span id="sim-btn-text">Execute What-If Simulation</span>
+          <svg id="sim-btn-spinner" class="animate-spin h-4 w-4 text-white hidden" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Results Panel (7 cols on lg) -->
+    <div class="lg:col-span-7 space-y-6">
+      
+      <!-- Comparison Summary Cards -->
+      <div id="sim-delta-card" class="card p-6 bg-white border border-slate-200 shadow-md space-y-5">
+        
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+              SIMULATED SCENARIO
+            </span>
+            <span class="text-xs font-bold text-slate-700">Operational Decision Analysis</span>
+          </div>
+          <span id="sim-weather-pill" class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+            Evaluating Baseline vs Scenario A
+          </span>
+        </div>
+
+        <!-- Metric Difference Highlights Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Ambient Temp Δ</span>
+            <strong id="delta-t-bg" class="text-base font-black text-slate-900">0.0°C</strong>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">ML Localized Δ</span>
+            <strong id="delta-t-ml" class="text-base font-black text-[#a43700]">0.0°C</strong>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Liljegren WBGT Δ</span>
+            <strong id="delta-wbgt" class="text-base font-black text-slate-900">0.0°C</strong>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Shift Pacing Δ</span>
+            <strong id="delta-pacing" class="text-base font-black text-emerald-700">+0 min</strong>
+          </div>
+        </div>
+
+        <!-- Side-by-Side State Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- Baseline Side -->
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Baseline Scenario</span>
+              <span class="text-[10px] font-mono text-slate-500" id="sim-base-temp-label">38.0°C Ambient</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="sim-base-badge-icon" class="text-xl" aria-hidden="true">🔴</span>
+              <span id="sim-base-level-text" class="text-lg font-black text-slate-900">VERY HIGH</span>
+            </div>
+            <div class="text-[11px] font-semibold text-slate-500">
+              Operational State: <strong id="sim-base-op-state" class="text-slate-800">STOP / POSTPONE</strong>
+            </div>
+            <div class="pt-2 border-t border-slate-200 text-xs text-slate-600 space-y-1">
+              <div>Pacing: <strong id="sim-base-pacing-text" class="text-slate-900">15 min work / 45 min rest</strong></div>
+              <div>Recovery: <span id="sim-base-rec-text" class="text-slate-700">Direct Sun</span></div>
+              <div>WBGT: <strong id="sim-base-wbgt-text" class="text-slate-900">32.5°C</strong></div>
+            </div>
+          </div>
+
+          <!-- Scenario Side -->
+          <div class="p-4 rounded-xl bg-[#fff9f6] border border-[#f0ded6] space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] uppercase font-bold text-[#a43700] tracking-wider">Simulated Outcome</span>
+              <span id="sim-action-delta-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Action Level Relieved
+              </span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="sim-target-badge-icon" class="text-xl" aria-hidden="true">🟡</span>
+              <span id="sim-target-level-text" class="text-lg font-black text-[#a43700]">MODERATE</span>
+            </div>
+            <div class="text-[11px] font-semibold text-slate-500">
+              Operational State: <strong id="sim-target-op-state" class="text-[#a43700]">ENHANCED CONTROLS</strong>
+            </div>
+            <div class="pt-2 border-t border-[#f0ded6] text-xs text-slate-700 space-y-1">
+              <div>Pacing: <strong id="sim-target-pacing-text" class="text-slate-900 font-bold">45 min work / 15 min rest</strong></div>
+              <div>Recovery: <span id="sim-target-rec-text" class="text-slate-800 font-medium">Cool Indoor / AC</span></div>
+              <div>WBGT: <strong id="sim-target-wbgt-text" class="text-slate-900 font-bold">28.2°C</strong></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 60-Minute ISO 7243 Work/Rest Graphic -->
+        <div class="space-y-3 pt-1">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Hourly Work/Rest Comparison (ISO 7243)</span>
+          
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between text-[11px] text-slate-500 font-medium">
+              <span>Baseline: <strong id="sim-base-split-label">15m work / 45m rest</strong></span>
+              <span class="font-mono text-slate-600" id="sim-base-pct-label">25% productive shift</span>
+            </div>
+            <div class="w-full h-3 rounded-full bg-slate-200 overflow-hidden flex border border-slate-300">
+              <div id="sim-bar-base-work" class="bg-orange-600 h-full transition-all" style="width: 25%;"></div>
+              <div id="sim-bar-base-rest" class="bg-slate-300 h-full transition-all" style="width: 75%;"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1 text-xs pt-1">
+            <div class="flex justify-between text-[11px] text-slate-800 font-bold">
+              <span>Simulated: <strong id="sim-target-split-label" class="text-[#a43700]">45m work / 15m rest</strong></span>
+              <span class="font-mono text-emerald-700" id="sim-target-pct-label">75% safe productive shift</span>
+            </div>
+            <div class="w-full h-3.5 rounded-full bg-slate-200 overflow-hidden flex border border-slate-300 ring-1 ring-emerald-400">
+              <div id="sim-bar-target-work" class="bg-[#2f9e44] h-full transition-all" style="width: 75%;"></div>
+              <div id="sim-bar-target-rest" class="bg-slate-300 h-full transition-all" style="width: 25%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explainable Driver Attribution: "Why did this change?" -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-1.5">
+              <span>🔍</span>
+              <span>Why Did The Risk Change? (Causal Attribution)</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">Thermodynamics & Physiology</span>
+          </div>
+          
+          <p id="sim-causal-narrative" class="text-xs text-slate-700 leading-relaxed font-medium">
+            Loading causal explanation...
+          </p>
+
+          <div id="sim-drivers-changed-list" class="space-y-1.5 pt-2">
+            <!-- Dynamically injected parameter delta tags -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DECISION TIMELINE SECTION -->
+      <div class="card p-6 bg-white border border-slate-200 shadow-md space-y-4">
+        
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-900 flex items-center space-x-2">
+              <span>⏱️</span>
+              <span>Shift Decision Timeline</span>
+            </h3>
+            <p class="text-xs text-slate-500">Hourly progression: Time → Forecast Heat Stress → ML Localized Temp → WBGT → Risk → Operational State</p>
+          </div>
+          <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+            ISO 7243 / ACGIH States
+          </span>
+        </div>
+
+        <!-- Timeline Stepper Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                <th class="py-2.5 px-3">Time</th>
+                <th class="py-2.5 px-3">Atmospheric</th>
+                <th class="py-2.5 px-3">ML Localized</th>
+                <th class="py-2.5 px-3">WBGT</th>
+                <th class="py-2.5 px-3">Operational State</th>
+                <th class="py-2.5 px-3">Pacing Advisory</th>
+              </tr>
+            </thead>
+            <tbody id="sim-timeline-tbody" class="divide-y divide-slate-100 font-medium">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Operational State Legend & Safety Guideline -->
+        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-[11px]">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">NORMAL</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">ENHANCED CONTROLS</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800">RESTRICT EXPOSURE</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">STOP / POSTPONE</span>
+          </div>
+          <p class="text-slate-500 italic">
+            *Safety Note: Zero heat risk cannot be guaranteed. Continuous hydration and active peer buddy monitoring remain mandatory.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentSimulationMode = 'single'; // 'single' or 'multi'
+
+  function setScenarioMode(mode) {
+    currentSimulationMode = mode;
+    const btnSingle = document.getElementById('btn-mode-single');
+    const btnMulti = document.getElementById('btn-mode-multi');
+
+    if (mode === 'single') {
+      btnSingle.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-[#a43700] shadow-xs';
+      btnMulti.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900';
+    } else {
+      btnMulti.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-white text-[#a43700] shadow-xs';
+      btnSingle.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900';
+    }
+    executeSimulation();
+  }
+
+  function updateSliderDisplay(sliderId, displayId, unit) {
+    const val = document.getElementById(sliderId).value;
+    document.getElementById(displayId).textContent = val + unit;
+    const numInput = document.getElementById(sliderId + '-num');
+    if (numInput) numInput.value = val;
+  }
+
+  function updateNumberInput(sliderId, val) {
+    const slider = document.getElementById(sliderId);
+    if (slider) slider.value = val;
+    const display = document.getElementById(sliderId + '-display');
+    if (display) display.textContent = val + (sliderId.includes('temp') ? '°C' : '%');
+  }
+
+  function syncLocationWeather() {
+    // Re-run simulation when location changes
+    executeSimulation();
+  }
+
+  async function executeSimulation() {
+    const simRunBtn = document.getElementById('sim-run-btn');
+    const simBtnText = document.getElementById('sim-btn-text');
+    const simBtnSpinner = document.getElementById('sim-btn-spinner');
+
+    const loc = document.getElementById('sim-location').value;
+    const tempC = parseFloat(document.getElementById('sim-temp').value) || 38.0;
+    const rhPct = parseFloat(document.getElementById('sim-rh').value) || 45.0;
+    const windMs = parseFloat(document.getElementById('sim-wind').value) || 2.0;
+    const solarWm2 = parseFloat(document.getElementById('sim-solar').value) || 650.0;
+
+    const startTime = document.getElementById('sim-start-time').value;
+    const durationHours = parseFloat(document.getElementById('sim-duration').value) || 6.0;
+
+    const baseWork = document.getElementById('sim-base-workload').value;
+    const baseRec = document.getElementById('sim-base-recovery').value;
+    const baseCloth = document.getElementById('sim-base-clothing').value;
+    const baseExp = document.getElementById('sim-base-exp').value;
+
+    const targetWork = document.getElementById('sim-target-workload').value;
+    const targetRec = document.getElementById('sim-target-recovery').value;
+    const targetCloth = document.getElementById('sim-target-clothing').value;
+    const targetExp = document.getElementById('sim-target-exp').value;
+
+    const payload = {
+      location: loc,
+      baseline_weather: {
+        temperature_c: tempC,
+        relative_humidity_pct: rhPct,
+        wind_speed_ms: windMs,
+        solar_radiation_wm2: solarWm2,
+      },
+      baseline_exposure: {
+        workload: baseWork,
+        recovery_environment: baseRec,
+        clothing: baseCloth,
+        acclimatization: baseExp,
+        exposure_duration_hours: durationHours,
+        work_start_time: startTime,
+        is_sun_exposed: baseRec === 'outdoor_direct',
+      },
+      scenarios: {
+        scenario_a: {
+          environmental: {
+            temperature_c: tempC,
+            relative_humidity_pct: rhPct,
+            wind_speed_ms: windMs,
+            solar_radiation_wm2: solarWm2,
+          },
+          exposure: {
+            workload: targetWork,
+            recovery_environment: targetRec,
+            clothing: targetCloth,
+            acclimatization: targetExp,
+            exposure_duration_hours: durationHours,
+            work_start_time: startTime,
+            is_sun_exposed: targetRec === 'outdoor_direct',
+          }
+        }
+      }
+    };
+
+    if (currentSimulationMode === 'multi') {
+      // Add Scenario B: Aggressive mitigation
+      payload.scenarios.scenario_b = {
+        environmental: {
+          temperature_c: Math.max(15, tempC - 3.0),
+          relative_humidity_pct: Math.max(10, rhPct - 5.0),
+          wind_speed_ms: windMs + 1.0,
+          solar_radiation_wm2: Math.max(0, solarWm2 - 200.0),
+        },
+        exposure: {
+          workload: 'light',
+          recovery_environment: 'cool_indoor',
+          clothing: 'light',
+          acclimatization: 'very_used',
+          exposure_duration_hours: Math.max(2, durationHours - 2),
+          work_start_time: startTime,
+          is_sun_exposed: false,
+        }
+      };
+    }
+
+    simRunBtn.disabled = true;
+    simBtnText.textContent = 'Calculating Scenario & Timeline...';
+    simBtnSpinner.classList.remove('hidden');
+
+    try {
+      const resp = await fetch('/api/scenario-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        if (typeof window.showToast === 'function') {
+          window.showToast(data.error || 'Simulation failed.', 'error');
+        }
+        return;
+      }
+      renderSimulationResults(data);
+    } catch (err) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Scenario simulation service temporarily unavailable.', 'error');
+      }
+    } finally {
+      simRunBtn.disabled = false;
+      simBtnText.textContent = 'Execute What-If Simulation';
+      simBtnSpinner.classList.add('hidden');
+    }
+  }
+
+  function renderSimulationResults(res) {
+    const base = res.baseline || {};
+    const scen = (res.scenarios && res.scenarios.scenario_a) || {};
+    const diff = (res.comparisons && res.comparisons.scenario_a) || {};
+    const timeline = res.decision_timeline || [];
+
+    // Validation Alert Banner
+    const alertBox = document.getElementById('sim-validation-alert');
+    const alertText = document.getElementById('sim-validation-text');
+    if (!res.is_validated_range && res.validation_warnings && res.validation_warnings.length > 0) {
+      alertBox.classList.remove('hidden');
+      alertText.textContent = res.validation_warnings.join(' ');
+    } else {
+      alertBox.classList.add('hidden');
+    }
+
+    // Metric Deltas
+    const dTemp = diff.temperature_diff_c !== undefined ? diff.temperature_diff_c : 0.0;
+    const dMl = diff.ml_localized_temp_diff_c !== undefined ? diff.ml_localized_temp_diff_c : 0.0;
+    const dWbgt = diff.wbgt_diff_c !== undefined ? diff.wbgt_diff_c : 0.0;
+    const dWork = diff.work_minutes_delta !== undefined ? diff.work_minutes_delta : 0;
+
+    document.getElementById('delta-t-bg').textContent = (dTemp > 0 ? '+' : '') + dTemp.toFixed(1) + '°C';
+    document.getElementById('delta-t-ml').textContent = (dMl > 0 ? '+' : '') + dMl.toFixed(1) + '°C';
+    document.getElementById('delta-wbgt').textContent = (dWbgt > 0 ? '+' : '') + dWbgt.toFixed(1) + '°C';
+    document.getElementById('delta-pacing').textContent = (dWork > 0 ? '+' : '') + dWork + ' min';
+
+    // Side-by-Side Cards
+    const icons = {
+      'Low': '🟢',
+      'Moderate': '🟡',
+      'High': '🟠',
+      'Very High': '🔴',
+      'Extreme': '🟣'
+    };
+
+    const bRisk = (base.exposure_assessment && base.exposure_assessment.risk_category) || 'Very High';
+    const sRisk = (scen.exposure_assessment && scen.exposure_assessment.risk_category) || 'Moderate';
+
+    document.getElementById('sim-base-badge-icon').textContent = icons[bRisk] || '🔴';
+    document.getElementById('sim-base-level-text').textContent = bRisk.toUpperCase();
+    document.getElementById('sim-target-badge-icon').textContent = icons[sRisk] || '🟡';
+    document.getElementById('sim-target-level-text').textContent = sRisk.toUpperCase();
+
+    const bState = (base.operational_recommendation && base.operational_recommendation.operational_state) || 'STOP / POSTPONE';
+    const sState = (scen.operational_recommendation && scen.operational_recommendation.operational_state) || 'ENHANCED CONTROLS';
+    document.getElementById('sim-base-op-state').textContent = bState;
+    document.getElementById('sim-target-op-state').textContent = sState;
+
+    const bWbgt = (base.thermal_physics && base.thermal_physics.wbgt_c !== undefined) ? base.thermal_physics.wbgt_c.toFixed(1) : '--';
+    const sWbgt = (scen.thermal_physics && scen.thermal_physics.wbgt_c !== undefined) ? scen.thermal_physics.wbgt_c.toFixed(1) : '--';
+    document.getElementById('sim-base-wbgt-text').textContent = bWbgt + '°C';
+    document.getElementById('sim-target-wbgt-text').textContent = sWbgt + '°C';
+
+    const bWr = (base.exposure_assessment && base.exposure_assessment.iso_7243_work_rest) || { work_minutes: 15, rest_minutes: 45 };
+    const sWr = (scen.exposure_assessment && scen.exposure_assessment.iso_7243_work_rest) || { work_minutes: 45, rest_minutes: 15 };
+    document.getElementById('sim-base-pacing-text').textContent = `${bWr.work_minutes}m work / ${bWr.rest_minutes}m rest`;
+    document.getElementById('sim-target-pacing-text').textContent = `${sWr.work_minutes}m work / ${sWr.rest_minutes}m rest`;
+
+    // Direction Badge
+    const dirBadge = document.getElementById('sim-action-delta-badge');
+    if (diff.risk_direction === 'improved') {
+      dirBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+      dirBadge.textContent = `Action Level Relieved (${bRisk} → ${sRisk})`;
+    } else if (diff.risk_direction === 'worsened') {
+      dirBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-300';
+      dirBadge.textContent = `Action Level Escalated (${bRisk} → ${sRisk})`;
+    } else {
+      dirBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300';
+      dirBadge.textContent = 'Identical Category Level';
+    }
+
+    // Work / Rest Bar Split
+    document.getElementById('sim-base-split-label').textContent = `${bWr.work_minutes}m work / ${bWr.rest_minutes}m rest`;
+    document.getElementById('sim-bar-base-work').style.width = `${(bWr.work_minutes / 60) * 100}%`;
+    document.getElementById('sim-bar-base-rest').style.width = `${(bWr.rest_minutes / 60) * 100}%`;
+    document.getElementById('sim-base-pct-label').textContent = `${Math.round((bWr.work_minutes / 60) * 100)}% productive shift`;
+
+    document.getElementById('sim-target-split-label').textContent = `${sWr.work_minutes}m work / ${sWr.rest_minutes}m rest`;
+    document.getElementById('sim-bar-target-work').style.width = `${(sWr.work_minutes / 60) * 100}%`;
+    document.getElementById('sim-bar-target-rest').style.width = `${(sWr.rest_minutes / 60) * 100}%`;
+    document.getElementById('sim-target-pct-label').textContent = `${Math.round((sWr.work_minutes / 60) * 100)}% safe productive shift`;
+
+    // Causal Attribution
+    const narrativeElem = document.getElementById('sim-causal-narrative');
+    narrativeElem.textContent = scen.why_did_risk_change || res.summary || "Operational intervention adjustments modify the balance of thermal strain and metabolic generation.";
+
+    const driversList = document.getElementById('sim-drivers-changed-list');
+    const paramChanges = scen.what_changed || [];
+    if (paramChanges.length > 0) {
+      driversList.innerHTML = paramChanges.map(ch => {
+        return `
+          <div class="p-2 rounded-lg bg-white border border-slate-200 text-xs flex items-center justify-between">
+            <span class="text-slate-800 font-medium">${ch}</span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      driversList.innerHTML = '<div class="text-xs text-slate-500 italic">No parameter changes detected.</div>';
+    }
+
+    // Decision Timeline Render
+    const timelineTbody = document.getElementById('sim-timeline-tbody');
+    if (timeline.length > 0) {
+      const stateStyles = {
+        'NORMAL': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        'ENHANCED CONTROLS': 'bg-amber-100 text-amber-800 border-amber-300',
+        'RESTRICT / MODIFY EXPOSURE': 'bg-orange-100 text-orange-800 border-orange-300',
+        'STOP / POSTPONE': 'bg-red-100 text-red-800 border-red-300',
+      };
+
+      timelineTbody.innerHTML = timeline.map(step => {
+        const badgeCls = stateStyles[step.operational_state] || 'bg-slate-100 text-slate-800 border-slate-300';
+        const isPeak = step.is_peak;
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors ${isPeak ? 'bg-amber-50/40' : ''}">
+            <td class="py-2 px-3 font-mono font-bold text-slate-900 flex items-center gap-1.5">
+              <span>${step.time}</span>
+              ${isPeak ? '<span class="text-[9px] px-1.5 py-0.2 rounded bg-red-100 text-red-700 font-bold uppercase">Peak</span>' : ''}
+            </td>
+            <td class="py-2 px-3 text-slate-600">${step.forecast_heat_stress}</td>
+            <td class="py-2 px-3 font-mono font-bold text-[#a43700]">${step.ml_localized_temp_c.toFixed(1)}°C</td>
+            <td class="py-2 px-3 font-mono font-bold text-slate-900">${step.wbgt_c.toFixed(1)}°C</td>
+            <td class="py-2 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold border inline-block ${badgeCls}">
+                ${step.operational_state}
+              </span>
+            </td>
+            <td class="py-2 px-3 text-slate-700 font-medium">${step.work_rest_pacing}</td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      timelineTbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-400 italic">Timeline unavailable.</td></tr>';
+    }
+  }
+
+  function loadSimulationPreset(preset) {
+    if (preset === 'construction_shade') {
+      document.getElementById('sim-temp').value = 40.0;
+      updateSliderDisplay('sim-temp', 'sim-temp-display', '°C');
+      document.getElementById('sim-rh').value = 45.0;
+      updateSliderDisplay('sim-rh', 'sim-rh-display', '%');
+      document.getElementById('sim-base-workload').value = 'heavy';
+      document.getElementById('sim-base-recovery').value = 'outdoor_direct';
+      document.getElementById('sim-base-clothing').value = 'heavy';
+      document.getElementById('sim-base-exp').value = 'not_used';
+
+      document.getElementById('sim-target-workload').value = 'moderate';
+      document.getElementById('sim-target-recovery').value = 'shade';
+      document.getElementById('sim-target-clothing').value = 'light';
+      document.getElementById('sim-target-exp').value = 'somewhat_used';
+    } else if (preset === 'heatwave_surge') {
+      document.getElementById('sim-temp').value = 44.0;
+      updateSliderDisplay('sim-temp', 'sim-temp-display', '°C');
+      document.getElementById('sim-rh').value = 55.0;
+      updateSliderDisplay('sim-rh', 'sim-rh-display', '%');
+      document.getElementById('sim-base-workload').value = 'moderate';
+      document.getElementById('sim-target-workload').value = 'light';
+      document.getElementById('sim-target-recovery').value = 'cool_indoor';
+    } else if (preset === 'early_shift') {
+      document.getElementById('sim-start-time').value = '06:00';
+      document.getElementById('sim-duration').value = '6.0';
+      document.getElementById('sim-target-workload').value = 'moderate';
+      document.getElementById('sim-target-recovery').value = 'shade';
+    } else if (preset === 'ppe_mitigation') {
+      document.getElementById('sim-base-clothing').value = 'ppe';
+      document.getElementById('sim-target-clothing').value = 'light';
+      document.getElementById('sim-target-recovery').value = 'cool_indoor';
+    } else if (preset === 'intervention_avoid_peak') {
+      document.getElementById('sim-start-time').value = '06:30';
+      document.getElementById('sim-duration').value = '3.0';
+      document.getElementById('sim-base-workload').value = 'heavy';
+      document.getElementById('sim-base-recovery').value = 'outdoor_direct';
+      document.getElementById('sim-target-workload').value = 'moderate';
+      document.getElementById('sim-target-recovery').value = 'shade';
+    }
+    executeSimulation();
+  }
+
+  document.getElementById('simulator-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    executeSimulation();
+  });
+
+  // Initial execution on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const loc = params.get('location');
+    if (loc) {
+      const select = document.getElementById('sim-location');
+      if (select) {
+        for (let i = 0; i < select.options.length; i++) {
+          if (select.options[i].value.toLowerCase() === loc.toLowerCase() || select.options[i].text.toLowerCase().includes(loc.toLowerCase())) {
+            select.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+    executeSimulation();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Cooling-Station Siting Recommender — Decision Support{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[#a43700] font-bold mb-1">
+        <span>Urban Heat Resilience</span>
+        <span>•</span>
+        <span>Multi-Criteria Decision Support</span>
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
+        Cooling-Station Siting Recommender
+      </h1>
+      <p class="text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+        Algorithmic decision-support module that evaluates candidate urban transit hubs, open-air wholesale markets,
+        and informal labor corridors to identify optimal locations for emergency hydration kiosks, shaded rest pavilions,
+        and misting shelters.
+      </p>
+    </div>
+
+    <!-- City Filter -->
+    <div class="flex-shrink-0">
+      <label for="city-filter-select" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+        Filter by Urban Corridor:
+      </label>
+      <select id="city-filter-select"
+              class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-sm focus:border-[#a43700] focus:ring-2 focus:ring-[#a43700]/20 outline-none transition-all">
+        <option value="">All Indian Corridors</option>
+        <option value="Delhi">Delhi NCR</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Pune">Pune</option>
+        <option value="Ahmedabad">Ahmedabad</option>
+        <option value="Khammam">Khammam</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Transparent Disclaimer Callout -->
+  <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start space-x-3">
+    <div class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </div>
+    <div class="space-y-0.5">
+      <span class="font-bold text-slate-800">Decision-Support Transparency Notice:</span>
+      <p>
+        Siting recommendations are advisory rankings generated from multi-criteria spatial formulas:
+        $$\text{Siting Score} = f(\text{WBGT Heat Load [45%]}, \text{Distance to Hospital [25%]}, \text{Worker Density [20%]}, \text{Canopy Deficit [10%]})$$
+        These results assist municipal commissioners and disaster management authorities in resource allocation; they are not an authoritative statutory mandate.
+      </p>
+    </div>
+  </div>
+
+  <!-- Recommendations List Grid -->
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">Ranked Priority Siting Allocations</h3>
+      <span id="recs-count-badge" class="text-xs font-bold text-slate-500 font-mono">-- Candidate Corridors</span>
+    </div>
+
+    <div id="recommendations-container" class="space-y-4">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const citySelect = document.getElementById('city-filter-select');
+  const container = document.getElementById('recommendations-container');
+  const countBadge = document.getElementById('recs-count-badge');
+
+  async function loadRecommendations() {
+    const city = citySelect.value;
+    const url = city ? `/api/cooling-stations/recommendations?city=${encodeURIComponent(city)}` : '/api/cooling-stations/recommendations';
+
+    try {
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!resp.ok) {
+        const errMsg = data.error || 'Failed to load recommendations.';
+        if (typeof window.showToast === 'function') {
+          window.showToast(errMsg, 'error', () => loadRecommendations());
+        }
+        return;
+      }
+
+      countBadge.textContent = `${data.count} Candidate Zones Evaluated`;
+      renderRecommendations(data.recommendations);
+    } catch (err) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Cooling-station recommendation service is temporarily unavailable.', 'error', () => loadRecommendations());
+      }
+    }
+  }
+
+  function renderRecommendations(recs) {
+    if (!recs.length) {
+      container.innerHTML = `
+        <div class="card p-8 text-center text-slate-500 text-sm bg-white border border-slate-200">
+          No candidate zones found for this city. Try selecting 'All Indian Corridors'.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = recs.map((r, idx) => {
+      return `
+        <div class="card p-6 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-4">
+          <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">#${idx + 1}</span>
+                <h4 class="text-lg font-black text-slate-900">${r.zone_name}</h4>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">${r.city} • ${r.zone_type}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${r.badge_class}">
+                ${r.priority}
+              </span>
+              <span class="font-mono text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800">
+                Score: ${r.siting_score}/100
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Current Thermal Load</span>
+              <span class="font-mono font-bold text-slate-900">${r.wbgt_c.toFixed(1)} °C WBGT</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Nearest Hospital</span>
+              <span class="font-semibold text-slate-900 truncate block" title="${r.nearest_facility}">${r.nearest_facility}</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Facility Gap</span>
+              <span class="font-mono font-bold text-slate-900">${r.distance_km} km away</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Tree Canopy Cover</span>
+              <span class="font-mono font-bold text-slate-900">${r.tree_canopy_pct}%</span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-100 text-xs text-amber-950 leading-relaxed">
+            <strong class="font-bold text-amber-900 block mb-0.5">Siting Rationale:</strong>
+            ${r.rationale}
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-blue-950 leading-relaxed">
+            <strong class="font-bold text-blue-900 block mb-0.5">Recommended Deployment:</strong>
+            ${r.suggested_facility}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const cityParam = urlParams.get('city') || urlParams.get('location');
+  if (cityParam && citySelect) {
+    for (let i = 0; i < citySelect.options.length; i++) {
+      if (citySelect.options[i].value.toLowerCase() === cityParam.toLowerCase() || citySelect.options[i].text.toLowerCase().includes(cityParam.toLowerCase())) {
+        citySelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  citySelect.addEventListener('change', loadRecommendations);
+  loadRecommendations();
+</script>
+{% endblock %}

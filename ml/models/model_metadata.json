@@ -1,0 +1,128 @@
+{
+  "model_version": "v1.1.0-rf-residual",
+  "model_type": "RandomForestRegressor",
+  "scientific_status": "PROTOTYPE_BENCHMARK_SYNTHETIC_LABELS_NOT_FOR_SCIENTIFIC_CLAIMS",
+  "scientific_claim_valid": false,
+  "target_definition": "localized_temperature_residual (T_local - T_background)",
+  "features_used": [
+    "background_temp_c",
+    "background_rh_pct",
+    "background_wind_ms",
+    "background_solar_wm2",
+    "elevation_m",
+    "urban_built_up_ratio",
+    "vegetation_canopy_deficit",
+    "population_density_k",
+    "distance_to_coast_km",
+    "is_coastal",
+    "day_of_year_sin",
+    "day_of_year_cos"
+  ],
+  "anti_leakage_safeguards": [
+    "raw_coordinates_removed",
+    "circular_interaction_terms_removed",
+    "strictly_temporal_train_test_split",
+    "leave_one_city_out_spatial_cross_validation"
+  ],
+  "training_dataset": "historical_paired_observations.csv",
+  "training_period": "2023-04-01 to 2023-06-30",
+  "test_period": "2024-04-01 to 2024-06-30",
+  "train_samples": 910,
+  "test_samples": 910,
+  "empirical_uncertainty": {
+    "method": "Empirical Conformal Quantile of Held-Out Residuals",
+    "half_width_90_c": 0.1,
+    "measured_test_coverage_pct": 90.0
+  },
+  "metrics_residual_target": {
+    "random_forest": {
+      "mae_c": 0.044,
+      "rmse_c": 0.059,
+      "mean_bias_c": -0.003,
+      "r2_score": 0.9416,
+      "sample_count": 910
+    },
+    "linear_regression": {
+      "mae_c": 0.032,
+      "rmse_c": 0.049,
+      "mean_bias_c": 0.003,
+      "r2_score": 0.9605,
+      "sample_count": 910
+    },
+    "climatological_bias": {
+      "mae_c": 0.191,
+      "rmse_c": 0.245,
+      "mean_bias_c": 0.02,
+      "r2_score": -0.0069,
+      "sample_count": 910
+    },
+    "zero_anomaly": {
+      "mae_c": 1.148,
+      "rmse_c": 1.174,
+      "mean_bias_c": -1.148,
+      "r2_score": -22.0559,
+      "sample_count": 910
+    }
+  },
+  "metrics_absolute_temperature": {
+    "random_forest": {
+      "mae_c": 0.044,
+      "rmse_c": 0.059,
+      "mean_bias_c": -0.003,
+      "r2_score": 0.9998,
+      "sample_count": 910
+    },
+    "linear_regression": {
+      "mae_c": 0.032,
+      "rmse_c": 0.049,
+      "mean_bias_c": 0.003,
+      "r2_score": 0.9999,
+      "sample_count": 910
+    },
+    "climatological_bias": {
+      "mae_c": 0.191,
+      "rmse_c": 0.245,
+      "mean_bias_c": 0.02,
+      "r2_score": 0.9971,
+      "sample_count": 910
+    },
+    "zero_anomaly": {
+      "mae_c": 1.148,
+      "rmse_c": 1.174,
+      "mean_bias_c": -1.148,
+      "r2_score": 0.9329,
+      "sample_count": 910
+    }
+  },
+  "baseline_improvements": {
+    "over_zero_anomaly": {
+      "delta_mae_c": 1.104,
+      "pct_improvement_mae": 96.2,
+      "delta_rmse_c": 1.115,
+      "pct_improvement_rmse": 95.0,
+      "meaningful_improvement": true
+    },
+    "over_climatological_bias": {
+      "delta_mae_c": 0.147,
+      "pct_improvement_mae": 77.0,
+      "delta_rmse_c": 0.186,
+      "pct_improvement_rmse": 75.9,
+      "meaningful_improvement": true
+    },
+    "over_linear_regression": {
+      "delta_mae_c": -0.012,
+      "pct_improvement_mae": -37.5,
+      "delta_rmse_c": -0.01,
+      "pct_improvement_rmse": -20.4,
+      "meaningful_improvement": false
+    }
+  },
+  "spatial_holdout_summary": {
+    "strategy": "Leave-One-City-Out Spatial Cross-Validation",
+    "cities_evaluated": 10,
+    "mean_spatial_mae_c": 0.134,
+    "mean_spatial_rmse_c": 0.145,
+    "mean_spatial_r2_score": -1.2793
+  },
+  "trained_at": "2026-09-24T01:52:43.150077"
+}

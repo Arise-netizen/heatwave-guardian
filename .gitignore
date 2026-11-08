@@ -1,0 +1,92 @@
+# ==============================================================================
+# HeatWave Guardian — Git Ignore Specification
+# ==============================================================================
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+.flaskenv
+secrets/
+credentials/
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.clean_test_venv/
+
+# Local configuration and data
+instance/
+*.sqlite
+*.sqlite3
+*.db
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build artifacts & packaging
+build/
+dist/
+*.egg-info/
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+
+# C extensions
+*.so
+
+# Scratch, local inspection artifacts & temporary browser tests
+scratch/
+
+# Agent & IDE local caches
+.agents/

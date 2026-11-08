@@ -1,0 +1,15 @@
+# HeatWave Guardian — Production & Development Dependencies
+Flask>=3.1.0,<4.0.0
+requests>=2.32.0,<3.0.0
+
+# Production WSGI Server for Linux/Cloud Environments (Render, Railway, Heroku, VPS)
+gunicorn>=22.0.0; sys_platform != "win32"
+
+# Production WSGI Server for Windows Environments & Cross-Platform Local Serving
+waitress>=3.0.0
+
+# Hyperlocal ML Intelligence Dependencies
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pandas>=2.0.0
+joblib>=1.3.0

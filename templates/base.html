@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}My Risk{% endblock %} | HeatWave Guardian — Heat-Risk Intelligence & Intervention Platform</title>
+  
+  <!-- Google Fonts: Inter, Hanken Grotesk & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#f8fafc',
+              accent: '#a43700',
+              accentHover: '#872e00',
+              border: '#e2e8f0',
+              navy: '#0f172a',
+            },
+            risk: {
+              low: '#2f9e44',
+              moderate: '#f2a900',
+              high: '#e8590c',
+              veryhigh: '#c1121f',
+              extreme: '#6a040f',
+            }
+          },
+          fontFamily: {
+            sans: ['"Hanken Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col bg-[#f8fafc] text-slate-800 antialiased selection:bg-[#a43700] selection:text-white overflow-x-clip max-w-full">
+
+  <!-- Primary Top Navigation -->
+  <header class="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand / Title -->
+        <a href="/" class="flex items-center space-x-3 group flex-shrink-0" aria-label="HeatWave Guardian Home">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#a43700] to-[#c1121f] text-white flex items-center justify-center font-extrabold text-xl shadow-md group-hover:scale-105 transition-transform">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+          </div>
+          <span class="text-xl font-bold tracking-tight text-slate-900 group-hover:text-[#a43700] transition-colors">
+            HeatWave Guardian
+          </span>
+        </a>
+
+        <!-- Desktop Navigation Links (Restored Complete 9-Item Navigation) -->
+        <nav class="hidden md:flex items-center space-x-0.5 lg:space-x-1" aria-label="Main Navigation">
+          <a href="/" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'my_risk' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            My Risk
+          </a>
+          <a href="/forecast" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'forecast' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Forecast
+          </a>
+          <a href="/what-if" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'what_if' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            What-If
+          </a>
+          <a href="/worksite" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'worksite' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Worksite
+          </a>
+          <a href="/authority" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'authority' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Authority Map
+          </a>
+          <a href="/cooling-stations" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'cooling_stations' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Cooling
+          </a>
+          <a href="/alerts" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'alerts' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Alerts
+          </a>
+          <a href="/validation" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'validation' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Validation
+          </a>
+          <a href="/methodology" 
+             class="px-2.5 py-1.5 text-xs lg:text-sm font-semibold rounded-lg transition-all {% if active_page == 'methodology' %}text-[#a43700] bg-[#fff5f0] border border-[#f0ded6] shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+            Methodology
+          </a>
+        </nav>
+
+        <!-- Mobile Menu Button -->
+        <div class="flex items-center md:hidden">
+          <button id="mobile-menu-btn" type="button" class="p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100" aria-label="Toggle Navigation Menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1">
+      <div class="text-[10px] uppercase font-bold text-slate-400 px-3 pt-1">Personal Heat-Stress</div>
+      <a href="/" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'my_risk' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        My Risk Assessment
+      </a>
+      <a href="/forecast" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'forecast' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        5-Day Forecast
+      </a>
+      <a href="/what-if" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'what_if' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        What-If Simulator
+      </a>
+
+      <div class="text-[10px] uppercase font-bold text-slate-400 px-3 pt-2">Workplace & Municipal</div>
+      <a href="/worksite" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'worksite' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        Worksite / Institute Dashboard
+      </a>
+      <a href="/authority" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'authority' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        Authority Heat-Risk Map
+      </a>
+      <a href="/cooling-stations" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'cooling_stations' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        Cooling-Station Siting
+      </a>
+      <a href="/alerts" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'alerts' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        Alerts & Communications Command
+      </a>
+
+      <div class="text-[10px] uppercase font-bold text-slate-400 px-3 pt-2">Science & Evidence</div>
+      <a href="/validation" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'validation' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        2015 Historical Validation
+      </a>
+      <a href="/methodology" class="block px-3 py-1.5 rounded-md text-sm font-medium {% if active_page == 'methodology' %}bg-[#fff5f0] text-[#a43700] font-semibold{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+        Scientific Methodology
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-10 mt-16 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="md:col-span-1 space-y-2">
+          <div class="flex items-center space-x-2">
+            <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-[#a43700] to-[#c1121f] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+              HG
+            </div>
+            <span class="font-bold text-slate-900 text-sm">HeatWave Guardian</span>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Personalized physiological heat-stress assessment, forecasting, and disaster intelligence platform for outdoor workers, enterprises, and municipal authorities in India.
+          </p>
+        </div>
+
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2.5">Personal Assessment</div>
+          <ul class="space-y-1.5 text-xs">
+            <li><a href="/" class="hover:text-[#a43700] transition-colors">My Risk Assessment</a></li>
+            <li><a href="/forecast" class="hover:text-[#a43700] transition-colors">5-Day Hourly Forecast</a></li>
+            <li><a href="/what-if" class="hover:text-[#a43700] transition-colors">What-If Scenario Simulator</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2.5">Workplace & Municipal</div>
+          <ul class="space-y-1.5 text-xs">
+            <li><a href="/worksite" class="hover:text-[#a43700] transition-colors">Worksite / Institute Dashboard</a></li>
+            <li><a href="/authority" class="hover:text-[#a43700] transition-colors">Authority & Municipal Map</a></li>
+            <li><a href="/cooling-stations" class="hover:text-[#a43700] transition-colors">Cooling-Station Siting</a></li>
+            <li><a href="/alerts" class="hover:text-[#a43700] transition-colors">Alerts Command Center</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2.5">Science & Standards</div>
+          <ul class="space-y-1.5 text-xs">
+            <li><a href="/validation" class="hover:text-[#a43700] transition-colors">2015 Historical Validation</a></li>
+            <li><a href="/methodology" class="hover:text-[#a43700] transition-colors">Algorithmic Methodology</a></li>
+            <li><a href="/api/validation/report" target="_blank" class="hover:text-[#a43700] transition-colors">Machine Validation JSON</a></li>
+            <li><a href="/api/validation/export?format=csv" class="hover:text-[#a43700] transition-colors">Download CSV Report</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
+        <div>
+          Liljegren et al. (2008) WBGT • IMD Regional Criteria (1991–2020 Normals) • ISO 7243 Work/Rest Standards
+        </div>
+        <div>
+          Atmospheric Observations: Open-Meteo Weather API
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Global JavaScript for Navigation -->
+  <script>
+    // Mobile menu toggle
+    const mobBtn = document.getElementById('mobile-menu-btn');
+    const mobMenu = document.getElementById('mobile-menu');
+    if (mobBtn && mobMenu) {
+      mobBtn.addEventListener('click', () => {
+        mobMenu.classList.toggle('hidden');
+      });
+    }
+
+    // Global Toast Notification Helper
+
+    window.showToast = function(message, type = 'error', retryCallback = null) {
+      const container = document.getElementById('global-toast-container');
+      if (!container) return;
+
+
+      const toast = document.createElement('div');
+      const isError = type === 'error';
+      toast.className = `toast-item ${isError ? 'bg-red-900/95 text-white border-red-700' : 'bg-slate-900/95 text-white border-slate-700'}`;
+
+      let actionHtml = '';
+      if (retryCallback && typeof retryCallback === 'function') {
+        actionHtml = `<button type="button" class="ml-auto px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded text-xs font-bold transition-colors">Retry</button>`;
+      }
+
+      toast.innerHTML = `
+        <div class="flex-shrink-0 mt-0.5">
+          ${isError ? '<svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' : '<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'}
+        </div>
+        <div class="text-xs font-medium leading-relaxed pr-2">${message}</div>
+        ${actionHtml}
+      `;
+
+      if (retryCallback) {
+        const btn = toast.querySelector('button');
+        if (btn) {
+          btn.addEventListener('click', () => {
+            toast.remove();
+            retryCallback();
+          });
+        }
+      }
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    };
+  </script>
+
+  <!-- Global Toast Container -->
+  <div id="global-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

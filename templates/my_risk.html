@@ -1,0 +1,2571 @@
+{% extends "base.html" %}
+
+{% block title %}My Risk — Personalized Heat-Risk Intelligence{% endblock %}
+
+{% block head %}
+<!-- Leaflet CSS & JS (Lightweight, Open-Source, Zero Key Required) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/static/map_config.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8 max-w-full overflow-x-clip">
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-amber-950 text-white p-5 sm:p-6 mb-6 shadow-md border border-slate-700 max-w-full">
+    <div class="relative z-10 max-w-3xl space-y-2.5">
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight text-white">
+        Know Your Heat Risk Before You Head Outdoors.
+      </h1>
+
+      <p class="text-sm text-slate-300 leading-relaxed max-w-2xl">
+        Understand environmental heat stress and your personal vulnerability through a clear, explainable assessment and actionable heat-safety guidance.
+      </p>
+
+      <div class="pt-1.5 flex flex-wrap items-center gap-3">
+        <a href="#assessment-section" aria-label="CHECK MY HEAT RISK"
+           class="inline-flex items-center space-x-2 bg-[#a43700] hover:bg-[#872e00] text-white font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all text-sm group">
+          <span>Check My Heat Risk</span>
+          <svg class="w-4 h-4 group-hover:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </a>
+        <a href="/forecast"
+           class="inline-flex items-center space-x-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2.5 rounded-xl backdrop-blur border border-white/20 transition-all text-sm">
+          <span>View 5-Day Forecast</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform Capabilities & Feature Portals -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 mb-6" aria-label="Platform Feature Portals">
+    <a href="/forecast" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">📅</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">5-Day Forecast</div>
+      <div class="text-[10px] text-slate-400">Hourly Curves</div>
+    </a>
+    <a href="/what-if" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">🧪</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">What-If Sim</div>
+      <div class="text-[10px] text-slate-400">Interventions</div>
+    </a>
+    <a href="/worksite" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">🏭</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">Worksite Hub</div>
+      <div class="text-[10px] text-slate-400">Multi-Site Ops</div>
+    </a>
+    <a href="/authority" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">🗺️</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">Authority Map</div>
+      <div class="text-[10px] text-slate-400">NDMA HAP</div>
+    </a>
+    <a href="/cooling-stations" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">🚰</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">Cooling Siting</div>
+      <div class="text-[10px] text-slate-400">Relief Kiosks</div>
+    </a>
+    <a href="/alerts" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">🔔</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">Alerts Command</div>
+      <div class="text-[10px] text-slate-400">Role SMS/WA</div>
+    </a>
+    <a href="/validation" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">📊</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">2015 Evidence</div>
+      <div class="text-[10px] text-slate-400">ERA5 Backtest</div>
+    </a>
+    <a href="/methodology" class="p-2.5 rounded-xl bg-white hover:bg-[#fff9f6] border border-slate-200 hover:border-[#f0ded6] shadow-2xs hover:shadow-xs transition-all text-center group">
+      <div class="text-base mb-1" aria-hidden="true">🔬</div>
+      <div class="font-bold text-slate-800 group-hover:text-[#a43700] text-xs">Methodology</div>
+      <div class="text-[10px] text-slate-400">Liljegren & IMD</div>
+    </a>
+  </div>
+
+  <!-- Assessment Grid Container -->
+  <div id="assessment-section" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Assessment Input Column (5 cols on lg) -->
+    <div class="lg:col-span-5">
+      <div id="assessment-form-card" class="card p-6 bg-white border border-slate-200 shadow-sm sticky-assessment-panel">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Your Work Conditions</h2>
+          <p class="text-xs text-slate-500">Answer 5 simple questions for tailored heat stress guidance</p>
+        </div>
+        <span id="form-weather-badge" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+          <span id="form-weather-badge-dot" class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+          <span id="form-weather-badge-text">Checking Weather...</span>
+        </span>
+      </div>
+
+      <!-- Inline validation alert box -->
+      <div id="validation-alert" class="hidden mb-4 p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-700 flex items-start space-x-2">
+        <svg class="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="validation-alert-text">Please ensure all required information is selected.</span>
+      </div>
+
+      <form id="risk-form" class="space-y-5" novalidate>
+        
+        <!-- 1. LOCATION -->
+        <div class="relative">
+          <label for="location-search" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>1. Where are you going to be? <span class="text-[#a43700]">*</span></span>
+          </label>
+          <div class="relative">
+            <input type="text" id="location-search" autocomplete="off"
+                   placeholder="Type city, district, or town in India (e.g. Pune, Delhi, Jaipur)..."
+                   value="Hyderabad"
+                   required
+                   class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#a43700] focus:ring-2 focus:ring-[#a43700]/20 outline-none pr-9 transition-all">
+            <div id="search-spinner" class="absolute right-3 top-3 hidden">
+              <svg class="animate-spin h-4 w-4 text-[#a43700]" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Autocomplete Dropdown List -->
+          <div id="location-dropdown" class="hidden absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100">
+          </div>
+
+          <!-- Hidden inputs for coordinates and location -->
+          <input type="hidden" id="selected-location" name="location" value="Hyderabad">
+          <input type="hidden" id="selected-lat" name="latitude" value="17.3850">
+          <input type="hidden" id="selected-lon" name="longitude" value="78.4867">
+          <input type="hidden" id="selected-admin1" name="admin1" value="Telangana">
+
+          <!-- Active Selection Summary & Coordinate indicator -->
+          <div id="selected-loc-indicator" class="mt-2 flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+            <div class="flex items-center space-x-1.5 text-slate-800 min-w-0">
+              <svg class="w-4 h-4 text-[#a43700] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span id="selected-loc-name" class="font-bold truncate">Hyderabad, Telangana, India</span>
+            </div>
+            <span id="selected-loc-coords" class="font-mono text-[11px] text-slate-500 flex-shrink-0 ml-2">17.3850° N, 78.4867° E</span>
+          </div>
+
+          <!-- Preset City Quick Pills -->
+          <div class="mt-2.5">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Quick Select:</span>
+            <div class="flex flex-wrap gap-1 mt-1">
+              {% for city in cities %}
+              <button type="button" class="preset-city-btn px-2 py-0.5 text-xs rounded border border-slate-200 bg-white text-slate-600 hover:text-[#a43700] hover:border-[#a43700] hover:bg-[#fff9f6] transition-colors {% if city == 'Hyderabad' %}bg-[#fff5f0] text-[#a43700] border-[#f0ded6] font-semibold{% endif %}"
+                      data-city="{{ city }}">
+                {{ city }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. AGE -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center justify-between">
+            <span>2. How old are you? <span class="text-[#a43700]">*</span></span>
+            <span class="text-[11px] font-normal text-slate-500">Age group</span>
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="age-group-options">
+            
+            <label class="age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all text-center">
+              <input type="radio" name="age_group" value="Under 18" class="sr-only" required>
+              <span class="text-sm font-semibold text-slate-800">Under 18</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">Youth</span>
+            </label>
+
+            <label class="age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all text-center">
+              <input type="radio" name="age_group" value="18–40" class="sr-only" checked required>
+              <span class="text-sm font-semibold text-[#a43700]">18–40</span>
+              <span class="text-[11px] text-slate-600 mt-0.5">Young Adult</span>
+            </label>
+
+            <label class="age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all text-center">
+              <input type="radio" name="age_group" value="41–60" class="sr-only" required>
+              <span class="text-sm font-semibold text-slate-800">41–60</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">Mid Adult</span>
+            </label>
+
+            <label class="age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all text-center">
+              <input type="radio" name="age_group" value="60+" class="sr-only" required>
+              <span class="text-sm font-semibold text-slate-800">60+</span>
+              <span class="text-[11px] text-slate-500 mt-0.5">Senior</span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- 3. EXPERIENCE WITH HOT WEATHER -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>3. How used are you to working in hot weather? <span class="text-[#a43700]">*</span></span>
+          </label>
+          <div class="space-y-2" id="experience-options">
+            
+            <label class="exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all">
+              <input type="radio" name="experience" value="very_used" checked class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-bold text-slate-900 text-sm">Very used to it</div>
+                <div class="text-slate-600 mt-0.5">I regularly work in hot weather</div>
+              </div>
+            </label>
+
+            <label class="exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="experience" value="somewhat_used" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Somewhat used to it</div>
+                <div class="text-slate-500 mt-0.5">I sometimes work in hot weather</div>
+              </div>
+            </label>
+
+            <label class="exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="experience" value="not_used" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Not used to it</div>
+                <div class="text-slate-500 mt-0.5">I recently started or returned to working in hot weather</div>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- 4. WORK INTENSITY -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>4. How physically demanding is your work? <span class="text-[#a43700]">*</span></span>
+          </label>
+          <div class="space-y-2" id="workload-options">
+            
+            <label class="work-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="work_intensity" value="light" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Light</div>
+                <div class="text-slate-500 mt-0.5">Mostly sitting, standing, or easy movement</div>
+              </div>
+            </label>
+
+            <label class="work-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all">
+              <input type="radio" name="work_intensity" value="moderate" checked class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-bold text-slate-900 text-sm">Moderate</div>
+                <div class="text-slate-600 mt-0.5">Regular walking or physical activity</div>
+              </div>
+            </label>
+
+            <label class="work-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="work_intensity" value="heavy" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Heavy</div>
+                <div class="text-slate-500 mt-0.5">Frequent lifting, carrying, or hard physical work</div>
+              </div>
+            </label>
+
+            <label class="work-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="work_intensity" value="very_heavy" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Very heavy</div>
+                <div class="text-slate-500 mt-0.5">Intense physical work for long periods</div>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- 5. CLOTHING / PROTECTIVE GEAR -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>5. What will you be wearing while working? <span class="text-[#a43700]">*</span></span>
+          </label>
+          <div class="space-y-2" id="clothing-options">
+            
+            <label class="cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all">
+              <input type="radio" name="clothing" value="light" checked class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-bold text-slate-900 text-sm">Light/normal clothing</div>
+                <div class="text-slate-600 mt-0.5">Standard breathable cotton work clothes</div>
+              </div>
+            </label>
+
+            <label class="cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="clothing" value="heavy" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Heavy work clothing</div>
+                <div class="text-slate-500 mt-0.5">Thick overalls, denim, or multiple layers</div>
+              </div>
+            </label>
+
+            <label class="cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="clothing" value="ppe" class="mt-1 accent-[#a43700] h-4 w-4" required>
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Protective gear / PPE</div>
+                <div class="text-slate-500 mt-0.5">Impermeable suits, aprons, masks, or full PPE</div>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- 6. RECOVERY ENVIRONMENT -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>6. Where do you take your recovery breaks?</span>
+            <span class="text-[10px] text-slate-400 font-normal">Operational Context</span>
+          </label>
+          <div class="space-y-2" id="recovery-options">
+            
+            <label class="rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="recovery_environment" value="cool_indoor" class="mt-1 accent-[#a43700] h-4 w-4">
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Cool indoor / Air-conditioned</div>
+                <div class="text-slate-500 mt-0.5">Air-conditioned breakroom, vehicle cab, or cooled shelter</div>
+              </div>
+            </label>
+
+            <label class="rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all">
+              <input type="radio" name="recovery_environment" value="shade" checked class="mt-1 accent-[#a43700] h-4 w-4">
+              <div class="text-xs">
+                <div class="font-bold text-slate-900 text-sm">Shaded outdoor area / Canopy</div>
+                <div class="text-slate-600 mt-0.5">Covered shelter, tree shade, or ventilated canopy</div>
+              </div>
+            </label>
+
+            <label class="rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="recovery_environment" value="warm_indoor" class="mt-1 accent-[#a43700] h-4 w-4">
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Warm uncooled indoor area</div>
+                <div class="text-slate-500 mt-0.5">Uncooled warehouse, metal shed, or poorly ventilated space</div>
+              </div>
+            </label>
+
+            <label class="rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="recovery_environment" value="outdoor_direct" class="mt-1 accent-[#a43700] h-4 w-4">
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Direct sun / Outdoor unshaded</div>
+                <div class="text-slate-500 mt-0.5">Open field, road, or active work zone without shade</div>
+              </div>
+            </label>
+
+            <label class="rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all">
+              <input type="radio" name="recovery_environment" value="unknown" class="mt-1 accent-[#a43700] h-4 w-4">
+              <div class="text-xs">
+                <div class="font-semibold text-slate-800 text-sm">Unspecified / Unknown</div>
+                <div class="text-slate-500 mt-0.5">Recovery conditions unverified or vary by task</div>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button type="submit" id="submit-btn"
+                  class="w-full flex items-center justify-center space-x-2 bg-[#a43700] hover:bg-[#872e00] text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all text-sm group">
+            <span id="btn-text">Assess My Heat Risk</span>
+            <svg id="btn-spinner" class="animate-spin h-4 w-4 text-white hidden" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </div>
+
+      </form>
+      </div>
+    </div>
+
+    <!-- Results Panel (7 cols on lg) -->
+    <div class="lg:col-span-7 space-y-6">
+
+      <!-- Genuine Empty State (Initial Notice) -->
+      <div id="empty-state" class="hidden card p-8 text-center bg-white border border-slate-200 shadow-sm">
+        <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-xl mb-3 text-slate-400">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">Ready to Assess Heat Risk</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mt-1">
+          Select your location and work conditions, then click Assess My Heat Risk.
+        </p>
+      </div>
+
+      <!-- Explicit Current Weather Unavailable State Card -->
+      <div id="weather-unavailable-card" class="hidden card p-6 text-center bg-white border border-rose-200 shadow-sm space-y-3">
+        <div class="w-12 h-12 mx-auto rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold">
+          ⚠️
+        </div>
+        <div>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 mb-1">
+            Weather Service Offline
+          </span>
+          <h3 class="text-lg font-bold text-slate-900">
+            Atmospheric Data Temporarily Unavailable
+          </h3>
+          <p id="weather-unavailable-reason" class="text-xs text-slate-600 max-w-md mx-auto mt-1 leading-relaxed">
+            The external weather service is temporarily unreachable for this location. HeatWave Guardian requires genuine meteorological data and does not invent simulated observations.
+          </p>
+        </div>
+        <div class="pt-2">
+          <button type="button" id="retry-weather-btn" onclick="runAssessment(false)" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
+            Retry Live Weather
+          </button>
+        </div>
+      </div>
+
+      <!-- Cached / Stale Notice Banner (Visible only when displaying stale cache) -->
+      <div id="weather-stale-banner" class="hidden p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start space-x-3 mb-4">
+        <span class="text-xl">⚠️</span>
+        <div class="text-xs space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-amber-900 uppercase tracking-wider text-[11px]">Cached Atmospheric Data</span>
+            <span id="weather-stale-timestamp" class="font-mono text-[10px] bg-amber-100 px-2 py-0.5 rounded text-amber-800">--</span>
+          </div>
+          <p class="text-amber-800 leading-relaxed">
+            Live atmospheric observations could not be refreshed. Displaying previously cached observation. Current microclimate conditions on site may have diverged.
+          </p>
+        </div>
+      </div>
+
+      <!-- Results Container -->
+      <div id="results-card" class="space-y-6">
+
+        <!-- 4. FINAL PERSONALIZED RISK CATEGORY CARD -->
+        <div id="risk-summary-hero" class="card p-6 bg-white border border-slate-200 shadow-md relative overflow-hidden transition-all"
+             role="region" aria-label="Current Action Level">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Personalized Risk Assessment</span>
+              <span id="risk-summary-sync" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                <span id="risk-summary-sync-text">Syncing...</span>
+              </span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span id="risk-summary-freshness" class="text-xs font-medium text-slate-500">Freshness: Checking...</span>
+              <span id="risk-summary-confidence" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                Confidence: Pending
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Level & Location Banner -->
+          <div class="my-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Location:</span>
+                <span id="res-location-heading" class="text-xs font-bold text-slate-900">Hyderabad</span>
+              </div>
+              <div class="flex items-center space-x-2.5 mt-1">
+                <span id="risk-summary-icon" class="text-2xl" aria-hidden="true">⏳</span>
+                <span id="risk-summary-level" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                  AWAITING WEATHER
+                </span>
+                <span id="risk-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-200 text-slate-700 shadow-2xs">
+                  AWAITING WEATHER
+                </span>
+              </div>
+            </div>
+            <div class="sm:text-right">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Peak Hazard Window</span>
+              <div id="risk-summary-peak-window" class="font-mono text-sm sm:text-base font-extrabold text-slate-700 mt-0.5">
+                12:00 – 16:00
+              </div>
+              <span class="text-[11px] text-slate-500">Diurnal Peak Exposure</span>
+            </div>
+          </div>
+
+          <!-- 2-Column Core Story: WHY & WHAT SHOULD I DO -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div class="p-3.5 rounded-xl bg-[#fff9f6] border border-[#f0ded6] space-y-1">
+              <span class="text-xs font-bold uppercase tracking-wider text-[#a43700] flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 text-[#a43700]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Why this risk level?</span>
+              </span>
+              <p id="risk-summary-why-text" class="text-slate-700 font-medium leading-relaxed">
+                Assessing personal and meteorological factors...
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Recommended immediate action</span>
+              </span>
+              <p id="risk-summary-action-text" class="text-slate-700 font-medium leading-relaxed">
+                Standard hydration and precautions.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 1. CORE THERMAL STRESS INDEX CARD (First & Most Prominent Output) -->
+        <div id="thermal-stress-card" class="card p-6 bg-white border-2 border-[#a43700]/30 shadow-lg relative overflow-hidden">
+          <div class="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-emerald-500 via-amber-500 via-orange-500 to-red-700"></div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#fff5f0] text-[#a43700] border border-[#f0ded6]">
+                  Core Biometeorological Output
+                </span>
+                <span class="text-xs font-bold text-slate-400">• Liljegren et al. (2008)</span>
+              </div>
+              <h2 class="text-2xl font-black tracking-tight text-slate-900 mt-1">
+                THERMAL STRESS INDEX
+              </h2>
+            </div>
+
+            <!-- Thermal Stress Level Badge -->
+            <div id="thermal-stress-badge" class="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider badge-low shadow-xs">
+              THERMAL STRESS: LOW
+            </div>
+          </div>
+
+          <!-- Gauge and WBGT Breakdown Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center py-5">
+            
+            <!-- Left: Semicircular SVG Gauge (5 cols) -->
+            <div class="sm:col-span-5 flex flex-col items-center justify-center">
+              <div class="relative w-60 h-36">
+                <svg viewBox="0 0 200 120" class="w-full h-full gauge-svg">
+                  <!-- Semicircular Track Segments (5 risk bands) -->
+                  <path d="M 25 100 A 75 75 0 0 1 39.3 55.9" fill="none" stroke="#2f9e44" stroke-width="16" stroke-linecap="round" />
+                  <path d="M 39.3 55.9 A 75 75 0 0 1 76.8 28.7" fill="none" stroke="#f2a900" stroke-width="16" />
+                  <path d="M 76.8 28.7 A 75 75 0 0 1 123.2 28.7" fill="none" stroke="#e8590c" stroke-width="16" />
+                  <path d="M 123.2 28.7 A 75 75 0 0 1 160.7 55.9" fill="none" stroke="#c1121f" stroke-width="16" />
+                  <path d="M 160.7 55.9 A 75 75 0 0 1 175 100" fill="none" stroke="#6a040f" stroke-width="16" stroke-linecap="round" />
+
+                  <!-- Center Readout (WBGT) -->
+                  <text x="100" y="86" text-anchor="middle" class="font-mono font-black text-2xl fill-slate-900" id="gauge-wbgt-text">--</text>
+                  <text x="100" y="98" text-anchor="middle" class="text-[9px] font-bold uppercase tracking-wider fill-slate-400">WBGT (°C)</text>
+
+                  <!-- Needle -->
+                  <g id="gauge-needle-group" class="needle" style="transform: rotate(-90deg);">
+                    <line x1="100" y1="100" x2="100" y2="35" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+                    <circle cx="100" cy="100" r="6" fill="#0f172a" />
+                    <circle cx="100" cy="100" r="2.5" fill="#ffffff" />
+                  </g>
+                </svg>
+              </div>
+
+              <!-- Gauge Legend underneath -->
+              <div class="flex items-center space-x-1.5 text-[10px] font-bold text-slate-500 mt-1">
+                <span class="text-[#2f9e44]">Safe (&lt;27)</span>
+                <span>•</span>
+                <span class="text-[#f2a900]">Caution</span>
+                <span>•</span>
+                <span class="text-[#e8590c]">Ext.Caution</span>
+                <span>•</span>
+                <span class="text-[#c1121f]">Danger</span>
+                <span>•</span>
+                <span class="text-[#6a040f]">Ext.Danger</span>
+              </div>
+            </div>
+
+            <!-- Right: Prominent WBGT & Meaning Banner (7 cols) -->
+            <div class="sm:col-span-7 space-y-3">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="flex items-baseline justify-between">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Outdoor WBGT Value</span>
+                  <span id="res-wbgt-band-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white border border-slate-200 text-slate-700">-- Zone</span>
+                </div>
+                <div class="flex items-baseline space-x-2 mt-1">
+                  <span id="ts-wbgt-value" class="font-mono text-3xl sm:text-4xl font-black text-slate-900">--</span>
+                  <span class="font-mono text-base font-bold text-slate-600">°C</span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-200 text-xs">
+                  <span class="font-bold text-slate-900 block mb-0.5">Scientific Interpretation:</span>
+                  <p id="ts-interpretation" class="text-slate-600 leading-relaxed">
+                    Evaluating environmental heat strain...
+                  </p>
+                </div>
+              </div>
+
+              <!-- Real Environmental Conditions Used -->
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Environmental Conditions Used:</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                  <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <span class="text-[9px] uppercase font-bold text-slate-400 block">Air Temp</span>
+                    <span id="ts-env-temp" class="font-mono font-bold text-slate-900 block mt-0.5">-- °C</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <span class="text-[9px] uppercase font-bold text-slate-400 block">Humidity</span>
+                    <span id="ts-env-rh" class="font-mono font-bold text-slate-900 block mt-0.5">-- %</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <span class="text-[9px] uppercase font-bold text-slate-400 block">Wind (10m)</span>
+                    <span id="ts-env-wind" class="font-mono font-bold text-slate-900 block mt-0.5">-- m/s</span>
+                  </div>
+                  <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                    <span class="text-[9px] uppercase font-bold text-slate-400 block">Solar Rad</span>
+                    <span id="ts-env-solar" class="font-mono font-bold text-slate-900 block mt-0.5">-- W/m²</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Explainability Callout (Why WBGT?) -->
+          <div class="mt-2 pt-3 border-t border-slate-200 bg-[#fff9f6] -mx-6 -mb-6 p-4 border-b-0 rounded-b-xl">
+            <div class="flex items-start space-x-2 text-xs">
+              <svg class="w-4 h-4 text-[#a43700] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div class="text-slate-700 leading-relaxed space-y-1.5">
+                <span class="font-bold text-slate-900 block">How is Thermal Stress calculated?</span>
+                <span>Thermal Stress is derived from outdoor Wet-Bulb Globe Temperature (WBGT) using the <strong class="text-slate-900">Liljegren et al. (2008)</strong> method. Meteorological conditions such as air temperature, humidity, wind and solar radiation are used to estimate the natural wet-bulb and globe temperatures, which are then combined as:</span>
+                <span class="block font-mono text-[11px] text-slate-800 bg-white/60 px-2 py-1 rounded border border-slate-200 mt-1">WBGT = 0.7 × T<sub>nwb</sub> + 0.2 × T<sub>g</sub> + 0.1 × T<sub>a</sub></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2. FULL EVALUATION PIPELINE (8-Step Hierarchy Flow) -->
+        <div class="card p-5 bg-white border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+              <span>Scientific Evaluation Pipeline</span>
+            </h3>
+            <span class="text-[11px] font-semibold text-slate-500">8-Step Hierarchy</span>
+          </div>
+
+          <!-- Compact Pipeline Flow -->
+          <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 py-1">
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600">Weather</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600">WBGT</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-[#fff5f0] text-[#a43700] border border-[#f0ded6]" id="flow-ts-pill">Thermal Stress</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600" id="flow-imd-pill">IMD</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600" id="flow-env-pill">Env. Risk</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">Personal Factors</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600" id="flow-pr-pill">Personal Risk</span>
+            <span>→</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Action</span>
+          </div>
+
+          <!-- 3-Column Detail Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            
+            <!-- Step A: Thermal Stress (Environmental) -->
+            <div class="p-3 rounded-xl bg-[#fff5f0] border border-[#f0ded6] space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black uppercase tracking-wider text-[#a43700]">A. Thermal Stress</span>
+                <span id="tier-a-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white text-[#a43700] border border-[#f0ded6]">--</span>
+              </div>
+              <div class="font-mono text-lg font-black text-slate-900" id="tier-a-val">-- °C</div>
+              <p class="text-[11px] text-slate-600 leading-tight">
+                Pure environmental heat load derived from Liljegren WBGT. <strong class="text-slate-800">This is an environmental indicator only.</strong>
+              </p>
+            </div>
+
+            <!-- Step B: Environmental Heatwave Risk -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">B. Environmental Risk</span>
+                <span id="tier-b-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white text-slate-700 border border-slate-200">--</span>
+              </div>
+              <div class="text-sm font-black text-slate-900" id="tier-b-val">--</div>
+              <p class="text-[11px] text-slate-600 leading-tight">
+                WBGT band fused with IMD regional heatwave criteria (<span id="tier-b-imd">--</span>).
+              </p>
+            </div>
+
+            <!-- Step C: Personal Heat Risk -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">C. Personal Heat Risk</span>
+                <span id="tier-c-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white text-slate-900 border border-slate-200">--</span>
+              </div>
+              <div class="text-sm font-black text-slate-900" id="tier-c-val">--</div>
+              <p class="text-[11px] text-slate-600 leading-tight">
+                Environmental risk escalated by physiological factors (<span id="tier-c-vuln">--</span>).
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Thermal Stress vs Personal Risk Distinction Callout -->
+          <div class="bg-[#f8f6ff] border border-[#e0daf5] rounded-lg p-3 flex items-start space-x-2 text-xs text-slate-700">
+            <svg class="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span><strong class="text-slate-900">Thermal Stress</strong> describes the environmental heat load based on WBGT. <strong class="text-slate-900">Personal Risk</strong> additionally considers individual vulnerability and workload.</span>
+          </div>
+        </div>
+
+        <!-- 3. EXPLAINABLE RISK INTELLIGENCE & DECISION TIMELINE CARD -->
+        <div class="card p-6 bg-white border border-slate-200 shadow-md space-y-5" id="explainable-risk-card">
+          
+          <!-- Top Header: Title, Action Level Badge, Depth Selector -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
+            <div>
+              <div class="flex items-center space-x-2 text-[10px] font-black uppercase tracking-wider text-[#a43700] mb-0.5">
+                <span>Deterministic Biometeorological Intelligence</span>
+                <span>•</span>
+                <span>ISO 7243 / ACGIH / IMD</span>
+              </div>
+              <h3 id="res-location-heading" class="text-2xl font-black text-slate-900">Hyderabad</h3>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+              <!-- Personal Risk Category Badge -->
+              <div id="risk-badge" class="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider badge-low shadow-xs flex items-center space-x-1.5"
+                   role="status" aria-label="Current Action Level">
+                <span id="risk-badge-icon" aria-hidden="true">🟢</span>
+                <span id="risk-badge-text">LOW RISK</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Immediate "WHY?" Callout (Phase 17 Requirement) -->
+          <div class="p-4 rounded-xl bg-[#fff9f6] border border-[#f0ded6] shadow-2xs space-y-1.5" id="res-why-callout">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-[#a43700] flex items-center space-x-1.5">
+                <svg class="w-4 h-4 text-[#a43700]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Why this action level?</span>
+              </span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Explainable Decision Support</span>
+            </div>
+            <p id="res-quick-why" class="text-sm font-semibold text-slate-900 leading-relaxed">
+              Evaluating atmospheric conditions and operational profile...
+            </p>
+          </div>
+
+          <!-- Explanation Depth Selector Tabs (Phase 14 Requirement) -->
+          <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+            <div class="flex items-center space-x-1 sm:space-x-2" role="tablist" aria-label="Explanation Depth">
+              <button type="button" id="tab-exp-quick" onclick="switchExplanationDepth('quick')"
+                      role="tab" aria-selected="false" aria-controls="exp-level-1-container"
+                      class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">
+                Quick (Level 1)
+              </button>
+              <button type="button" id="tab-exp-detailed" onclick="switchExplanationDepth('detailed')"
+                      role="tab" aria-selected="true" aria-controls="exp-level-2-container"
+                      class="px-3 py-1 rounded-lg text-xs font-bold bg-[#a43700] text-white shadow-xs transition-all">
+                Detailed (Level 2)
+              </button>
+              <button type="button" id="tab-exp-technical" onclick="switchExplanationDepth('technical')"
+                      role="tab" aria-selected="false" aria-controls="exp-level-3-container"
+                      class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all">
+                Technical / Audit (Level 3)
+              </button>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">No generative AI overrides</span>
+          </div>
+
+          <!-- Personal Factors Summary Pill Bar -->
+          <div class="py-2.5 px-3.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center gap-2 text-xs text-slate-700">
+            <span class="font-bold text-slate-900">Assessed context:</span>
+            <span id="res-pill-age" class="px-2 py-0.5 rounded bg-white border border-slate-200 font-medium">Age: --</span>
+            <span id="res-pill-exp" class="px-2 py-0.5 rounded bg-white border border-slate-200 font-medium">Heat Exp: --</span>
+            <span id="res-pill-work" class="px-2 py-0.5 rounded bg-white border border-slate-200 font-medium">Work: --</span>
+            <span id="res-pill-cloth" class="px-2 py-0.5 rounded bg-white border border-slate-200 font-medium">Gear: --</span>
+            <span id="res-pill-region" class="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-medium">Region: --</span>
+          </div>
+
+          <!-- LEVEL 1 CONTAINER: Quick Summary -->
+          <div id="exp-level-1-container" class="hidden space-y-3">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Plain-English Operational Summary</h4>
+              <p id="res-summary" class="text-sm text-slate-700 leading-relaxed">--</p>
+            </div>
+          </div>
+
+          <!-- LEVEL 2 CONTAINER: Detailed Operational View (Default) -->
+          <div id="exp-level-2-container" class="space-y-4">
+
+            <!-- Sub-section A: Why This Level (Pipeline & Triggered Rules) -->
+            <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-2xs space-y-3">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center space-x-1.5">
+                  <span>🔬</span>
+                  <span>1. Why This Level — Decision Trace & Rules</span>
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">Stage: COMPLETE</span>
+              </div>
+              
+              <!-- Pipeline flow visualization -->
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <span class="text-[10px] text-slate-400 uppercase font-bold block">1. Inputs</span>
+                  <span id="trace-step-inputs" class="font-mono font-bold text-slate-800 text-[11px]">--</span>
+                </div>
+                <div class="p-2 rounded-lg bg-amber-50/60 border border-amber-200">
+                  <span class="text-[10px] text-amber-700 uppercase font-bold block">2. WBGT</span>
+                  <span id="trace-step-wbgt" class="font-mono font-bold text-amber-900 text-[11px]">--</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <span class="text-[10px] text-slate-400 uppercase font-bold block">3. IMD Status</span>
+                  <span id="trace-step-imd" class="font-mono font-bold text-slate-800 text-[11px]">--</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                  <span class="text-[10px] text-slate-400 uppercase font-bold block">4. Vulnerability</span>
+                  <span id="trace-step-vuln" class="font-mono font-bold text-slate-800 text-[11px]">--</span>
+                </div>
+                <div class="p-2 rounded-lg bg-[#fff5f0] border border-[#f0ded6] col-span-2 sm:col-span-1">
+                  <span class="text-[10px] text-[#a43700] uppercase font-bold block">5. Action Level</span>
+                  <span id="trace-step-final" class="font-mono font-bold text-[#a43700] text-[11px]">--</span>
+                </div>
+              </div>
+
+              <!-- Triggered rules list -->
+              <div class="space-y-1.5 pt-1">
+                <span class="text-[11px] font-bold text-slate-700 block">Triggered Decision Rules:</span>
+                <div id="res-triggered-rules-list" class="space-y-1.5 text-xs text-slate-700">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-section B: What Is Driving It (Primary Drivers vs Contributing Factors) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- Primary Drivers Card -->
+              <div class="border border-red-200 rounded-xl p-4 bg-red-50/40 shadow-2xs space-y-2">
+                <div class="flex items-center justify-between pb-1.5 border-b border-red-200/60">
+                  <span class="text-xs font-bold uppercase tracking-wider text-red-900 flex items-center space-x-1.5">
+                    <span aria-hidden="true">🚨</span>
+                    <span>Primary Drivers</span>
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">Material Determinants</span>
+                </div>
+                <ul id="res-primary-drivers-list" class="space-y-2 text-xs text-slate-800 font-medium">
+                  <!-- Dynamically populated -->
+                </ul>
+              </div>
+
+              <!-- Contributing Factors Card -->
+              <div class="border border-amber-200 rounded-xl p-4 bg-amber-50/40 shadow-2xs space-y-2">
+                <div class="flex items-center justify-between pb-1.5 border-b border-amber-200/60">
+                  <span class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center space-x-1.5">
+                    <span aria-hidden="true">⚠️</span>
+                    <span>Contributing Factors</span>
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Secondary Burden</span>
+                </div>
+                <ul id="res-contributing-factors-list" class="space-y-2 text-xs text-slate-800 font-medium">
+                  <!-- Dynamically populated -->
+                </ul>
+              </div>
+
+            </div>
+
+            <!-- Sub-section C: What Is Protecting (Protective Factors) -->
+            <div class="border border-emerald-200 rounded-xl p-4 bg-emerald-50/40 shadow-2xs space-y-2">
+              <div class="flex items-center justify-between pb-1.5 border-b border-emerald-200/60">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-900 flex items-center space-x-1.5">
+                  <span aria-hidden="true">🛡️</span>
+                  <span>Protective Factors & Physiological Defenses</span>
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Risk Dampeners</span>
+              </div>
+              <ul id="res-protective-factors-list" class="space-y-1.5 text-xs text-slate-800 font-medium">
+                <!-- Dynamically populated -->
+              </ul>
+            </div>
+
+            <!-- Sub-section D: What Can Change (Counterfactual Factor Sensitivities) -->
+            <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-2xs space-y-3">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center space-x-1.5">
+                    <span>⚡</span>
+                    <span>What Can Change? — Counterfactual Factor Sensitivities</span>
+                  </span>
+                  <p class="text-[11px] text-slate-500 mt-0.5">
+                    Calculated under current identical weather. Explains whether operational adjustments alter the category or relieve pacing.
+                  </p>
+                </div>
+              </div>
+
+              <div id="res-factor-sensitivities-list" class="space-y-2.5">
+                <!-- Dynamically populated sensitivity cards -->
+              </div>
+            </div>
+
+            <!-- Sub-section E: Confidence & Data Limitations -->
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/80 shadow-2xs space-y-2 text-xs text-slate-700">
+              <div class="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                <span class="font-bold text-slate-800 flex items-center space-x-1.5">
+                  <span>ℹ️</span>
+                  <span>Confidence, Uncertainty & Screening Limitations</span>
+                </span>
+                <div class="flex items-center space-x-1.5">
+                  <span id="res-freshness-tag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    ● Live Fresh
+                  </span>
+                  <span id="res-confidence-tag" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-700 border border-slate-300">
+                    Confidence: --
+                  </span>
+                </div>
+              </div>
+              <div id="res-source-metadata" class="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-1 font-mono pt-1">
+                <span>Source: <strong class="text-slate-700" id="res-source-name">Open-Meteo Atmospheric Services</strong></span>
+                <span>Resolution: <strong class="text-slate-700" id="res-source-res">Surface Level (2m/10m)</strong></span>
+                <span>Observed: <strong class="text-slate-700" id="res-source-time">--</strong></span>
+              </div>
+              <ul id="res-plain-uncertainty-list" class="list-disc pl-4 space-y-1 text-slate-600 text-[11px] pt-1">
+                <!-- Dynamically populated plain English limitations -->
+              </ul>
+            </div>
+
+          </div>
+
+          <!-- LEVEL 3 CONTAINER: Technical / Audit Trace (Hidden by default) -->
+          <div id="exp-level-3-container" class="hidden space-y-4">
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-900 text-slate-100 space-y-3 font-mono text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-[11px]">
+                <span class="text-amber-400 font-bold">RESEARCH / AUDIT TRACE JSON</span>
+                <span class="text-slate-400">ENGINE v2.1.0-explainable</span>
+              </div>
+              <pre id="res-technical-trace-pre" class="overflow-x-auto text-[11px] text-slate-300 max-h-96 p-2 bg-slate-950 rounded leading-tight">
+                -- Loading technical audit trace --
+              </pre>
+              <div class="text-[10px] text-slate-400 pt-2 border-t border-slate-800">
+                Standards: ISO 7243:2017 | ACGIH TLVs | IMD Heatwave Operational Criteria | NDMA 2019
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 4. Work / Rest & Exposure Intervention Guidance Card -->
+        <div class="card p-6 bg-white border border-slate-200 shadow-md">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-200">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Occupational Decision Support</span>
+              <h3 class="text-sm sm:text-base font-black text-slate-900 mt-0.5">
+                Work/Rest & Exposure Intervention Guidance
+              </h3>
+            </div>
+            <span id="res-rec-level-badge" class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs">
+              -- Precaution Level
+            </span>
+          </div>
+
+          <!-- Precaution Level & Narrative Guidance Box -->
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 mb-4 space-y-3">
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 rounded-lg bg-[#a43700] text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+              </div>
+              <div class="space-y-1">
+                <span class="text-xs font-bold text-slate-900 block">
+                  Recommended Action Level: <span id="res-rec-level" class="text-[#a43700]">Evaluating...</span>
+                </span>
+                <p id="res-work-guidance" class="text-xs text-slate-700 leading-relaxed font-medium">
+                  Evaluating operational work pacing...
+                </p>
+                <p id="res-recovery-guidance" class="text-xs text-slate-600 leading-relaxed">
+                  Evaluating recovery setting requirements...
+                </p>
+              </div>
+            </div>
+
+            <!-- Contextual Schedule Windows -->
+            <div class="pt-2.5 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Operational Work Window</span>
+                <span id="res-work-window" class="font-bold text-slate-900 block mt-0.5 text-xs">--</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                <span class="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Required Recovery Window</span>
+                <span id="res-recovery-window" class="font-bold text-slate-900 block mt-0.5 text-xs">--</span>
+              </div>
+            </div>
+
+            <!-- Decision Basis Chips -->
+            <div class="pt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+              <span class="font-bold text-slate-400 uppercase tracking-wider">Decision Basis:</span>
+              <div id="res-basis-chips" class="flex flex-wrap gap-1">
+                <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-medium">Environmental Baseline</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hourly Indicative Work/Rest Split -->
+          <div class="grid grid-cols-2 gap-4 text-center mb-3">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-xs text-slate-500 font-medium">Indicative Work Pacing</span>
+              <div class="flex items-center justify-center space-x-1 mt-1">
+                <span id="res-work-min" class="font-mono text-3xl font-extrabold text-slate-900">--</span>
+                <span class="text-xs text-slate-600 font-medium">min/hr</span>
+              </div>
+            </div>
+            
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-xs text-slate-500 font-medium">Indicative Rest in Recovery Area</span>
+              <div class="flex items-center justify-center space-x-1 mt-1">
+                <span id="res-rest-min" class="font-mono text-3xl font-extrabold text-slate-900">--</span>
+                <span class="text-xs text-slate-600 font-medium">min/hr</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual 60-Minute Bar -->
+          <div class="mb-4">
+            <div class="w-full h-4 rounded-full bg-slate-100 overflow-hidden flex border border-slate-200 shadow-inner">
+              <div id="bar-work" class="bg-[#2f9e44] h-full transition-all duration-500" style="width: 100%;"></div>
+              <div id="bar-rest" class="bg-slate-300 h-full transition-all duration-500" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1.5 font-mono font-medium">
+              <span>0 min</span>
+              <span id="bar-split-text">Work: 60m | Rest: 0m</span>
+              <span>60 min</span>
+            </div>
+          </div>
+
+          <!-- Safety / Operational Instruction Box -->
+          <div id="res-instruction-box" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed mb-4">
+            <strong class="font-bold text-slate-900 block mb-1">Operational Instruction:</strong>
+            <span id="res-instruction">--</span>
+          </div>
+
+          <!-- Forecast Peak-Risk Exposure Window Banner -->
+          <div id="res-peak-window-container" class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 mb-4 text-xs">
+            <div class="flex items-center justify-between pb-2 border-b border-amber-200/80 mb-2">
+              <span class="font-bold text-amber-900 flex items-center space-x-1.5">
+                <span>⏱️ Forecast Peak-Risk Work Windows</span>
+              </span>
+              <span id="res-peak-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900">Forecast Analysis</span>
+            </div>
+            <p id="res-peak-message" class="text-amber-800 text-[11px] mb-2">
+              Peak window cannot be estimated reliably from available data.
+            </p>
+            <div id="res-peak-windows-list" class="space-y-1.5">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Structured Operational Interventions & Controls -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-200">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+                <span>🛡️ Recommended Operational Controls & Precautions</span>
+              </h4>
+              <span class="text-[10px] text-slate-500 font-semibold">Context-Driven Actions</span>
+            </div>
+            <div id="res-recommended-controls" class="space-y-2">
+              <!-- Dynamically populated categorized cards with traceable reasons -->
+            </div>
+          </div>
+
+          <!-- Operational Limitations & Disclaimers -->
+          <div id="res-limitations-box" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1.5">
+            <span class="font-bold text-slate-800 block">Screening Decision Support & Operational Limitations:</span>
+            <ul id="res-limitations-list" class="list-disc pl-4 space-y-0.5">
+              <li>Recommendations serve as occupational screening guidance and do not constitute individualized medical prescriptions or universal safety guarantees.</li>
+            </ul>
+          </div>
+
+          <!-- Action Links & Cross-Module Shortcuts -->
+          <div class="mt-5 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <a id="res-forecast-link" href="/forecast"
+               class="inline-flex items-center space-x-1.5 text-xs font-bold text-[#a43700] hover:text-[#872e00] hover:underline">
+              <span>View 5-Day Forecast &rarr;</span>
+            </a>
+            <div class="flex flex-wrap items-center gap-2.5 text-xs">
+              <a id="res-whatif-link" href="/what-if" class="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-[#fff9f6] border border-slate-200 text-slate-700 hover:text-[#a43700] font-semibold transition-colors">
+                <span>🧪 Simulate in What-If</span>
+              </a>
+              <a id="res-cooling-link" href="/cooling-stations" class="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-[#fff9f6] border border-slate-200 text-slate-700 hover:text-[#a43700] font-semibold transition-colors">
+                <span>🚰 Cooling Stations</span>
+              </a>
+              <a id="res-alerts-link" href="/alerts" class="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-[#fff9f6] border border-slate-200 text-slate-700 hover:text-[#a43700] font-semibold transition-colors">
+                <span>🔔 Role Alerts</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 5. Assessed Location Map Card -->
+        <div id="map-section-card" class="card p-5 bg-white border border-slate-200 shadow-md space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700">Assessed Location Map</span>
+                <span id="map-tile-error" class="hidden text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Offline Tiles</span>
+              </div>
+              <div class="flex items-center space-x-2 mt-0.5">
+                <span id="map-location-title" class="text-sm font-bold text-slate-900">Hyderabad</span>
+                <span id="map-location-coords" class="font-mono text-xs text-slate-500">17.3850° N, 78.4867° E</span>
+              </div>
+            </div>
+            <button type="button" id="recenter-map-btn"
+                    class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs">
+              Recenter
+            </button>
+          </div>
+
+          <!-- Map Container -->
+          <div id="location-map" class="w-full h-56 rounded-xl border border-slate-200 z-10"></div>
+
+          <!-- Map Metrics Strip -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">WBGT Value</span>
+              <span id="map-stat-wbgt" class="font-mono font-bold text-slate-900 text-sm mt-0.5 block">--</span>
+              <span id="map-stat-wbgt-band" class="text-[10px] text-slate-500 block">--</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">IMD Regional</span>
+              <span id="map-stat-imd" class="font-bold text-slate-900 text-xs mt-0.5 block">Normal</span>
+              <span id="map-stat-region" class="text-[10px] text-slate-500 block">Regional IMD</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Heat Risk:</span>
+              <span id="map-stat-risk" class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700">--</span>
+              <span id="map-stat-vuln" class="text-[10px] text-slate-500 block mt-0.5">Vuln: --</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Immediate Action</span>
+              <span id="map-stat-action" class="font-semibold text-slate-800 text-[11px] mt-0.5 block truncate">Standard Care</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const form = document.getElementById('risk-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const btnText = document.getElementById('btn-text');
+  const btnSpinner = document.getElementById('btn-spinner');
+  const emptyState = document.getElementById('empty-state');
+  const resultsCard = document.getElementById('results-card');
+  const validationAlert = document.getElementById('validation-alert');
+  const validationAlertText = document.getElementById('validation-alert-text');
+
+  // Location search elements
+  let debounceTimer = null;
+  const searchInput = document.getElementById('location-search');
+  const dropdown = document.getElementById('location-dropdown');
+  const searchSpinner = document.getElementById('search-spinner');
+  const selectedLocationInput = document.getElementById('selected-location');
+  const selectedLatInput = document.getElementById('selected-lat');
+  const selectedLonInput = document.getElementById('selected-lon');
+  const selectedAdmin1Input = document.getElementById('selected-admin1');
+  const selectedLocName = document.getElementById('selected-loc-name');
+  const selectedLocCoords = document.getElementById('selected-loc-coords');
+  const presetBtns = document.querySelectorAll('.preset-city-btn');
+
+  // Preset coordinates lookup: [lat, lon, "City, State, India", admin1]
+  const PRESET_COORDS = {
+    "Delhi": [28.6139, 77.2090, "Delhi, India", "Delhi"],
+    "Hyderabad": [17.3850, 78.4867, "Hyderabad, Telangana, India", "Telangana"],
+    "Khammam": [17.2473, 80.1514, "Khammam, Telangana, India", "Telangana"],
+    "Chennai": [13.0827, 80.2707, "Chennai, Tamil Nadu, India", "Tamil Nadu"],
+    "Mumbai": [19.0760, 72.8777, "Mumbai, Maharashtra, India", "Maharashtra"],
+    "Kolkata": [22.5726, 88.3639, "Kolkata, West Bengal, India", "West Bengal"],
+    "Jaisalmer": [26.9157, 70.9083, "Jaisalmer, Rajasthan, India", "Rajasthan"],
+    "Nagpur": [21.1458, 79.0882, "Nagpur, Maharashtra, India", "Maharashtra"],
+    "Ahmedabad": [23.0225, 72.5714, "Ahmedabad, Gujarat, India", "Gujarat"],
+    "Bhubaneswar": [20.2961, 85.8245, "Bhubaneswar, Odisha, India", "Odisha"],
+  };
+
+  let currentAssessmentResult = null;
+  let locationMap = null;
+  let currentMarker = null;
+  let tileLayer = null;
+  let currentMapCoords = [17.3850, 78.4867];
+
+  function setLocation(name, lat, lon, displayName, admin1) {
+    selectedLocationInput.value = name;
+    selectedLatInput.value = lat;
+    selectedLonInput.value = lon;
+    if (admin1 && selectedAdmin1Input) {
+      selectedAdmin1Input.value = admin1;
+    }
+    searchInput.value = name;
+    selectedLocName.textContent = displayName || name;
+    selectedLocCoords.textContent = `${parseFloat(lat).toFixed(4)}° N, ${parseFloat(lon).toFixed(4)}° E`;
+
+    // Update map header
+    const mapTitle = document.getElementById('map-location-title');
+    const mapCoords = document.getElementById('map-location-coords');
+    if (mapTitle) mapTitle.textContent = displayName || name;
+    if (mapCoords) mapCoords.textContent = `${parseFloat(lat).toFixed(4)}° N, ${parseFloat(lon).toFixed(4)}° E`;
+
+    dropdown.classList.add('hidden');
+    validationAlert.classList.add('hidden');
+
+    presetBtns.forEach(btn => {
+      if (btn.dataset.city === name) {
+        btn.className = 'preset-city-btn px-2 py-0.5 text-xs rounded border border-[#f0ded6] bg-[#fff5f0] text-[#a43700] font-semibold transition-colors';
+      } else {
+        btn.className = 'preset-city-btn px-2 py-0.5 text-xs rounded border border-slate-200 bg-white text-slate-600 hover:text-[#a43700] hover:border-[#a43700] hover:bg-[#fff9f6] transition-colors';
+      }
+    });
+
+    // Update map view and marker
+    if (locationMap) {
+      currentMapCoords = [parseFloat(lat), parseFloat(lon)];
+      locationMap.flyTo(currentMapCoords, 11, { duration: 1.0 });
+      updateMapMarker(currentMapCoords[0], currentMapCoords[1], name, 'Moderate', null);
+    }
+
+    // Trigger live risk assessment for newly selected location
+    runAssessment(false);
+  }
+
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const city = btn.dataset.city;
+      if (PRESET_COORDS[city]) {
+        const [lat, lon, disp, admin1] = PRESET_COORDS[city];
+        setLocation(city, lat, lon, disp, admin1);
+      }
+    });
+  });
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = searchInput.value.trim();
+    if (q.length < 2) {
+      dropdown.innerHTML = '';
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    searchSpinner.classList.remove('hidden');
+    debounceTimer = setTimeout(async () => {
+      try {
+        const resp = await fetch(`/api/search-location?q=${encodeURIComponent(q)}`);
+        const data = await resp.json();
+        if (!resp.ok) {
+          dropdown.innerHTML = `<div class="p-3 text-xs text-red-600">${data.error || 'Location search service is temporarily unavailable.'}</div>`;
+          dropdown.classList.remove('hidden');
+          return;
+        }
+        renderDropdown(data.results || []);
+      } catch (err) {
+        dropdown.innerHTML = '<div class="p-3 text-xs text-red-600">Location search service is temporarily unavailable.</div>';
+        dropdown.classList.remove('hidden');
+      } finally {
+        searchSpinner.classList.add('hidden');
+      }
+    }, 260);
+  });
+
+  function renderDropdown(results) {
+    if (!results.length) {
+      dropdown.innerHTML = '<div class="p-3 text-xs text-slate-500 italic">No Indian locations found. Try typing a known city or town in India.</div>';
+      dropdown.classList.remove('hidden');
+      return;
+    }
+
+    dropdown.innerHTML = results.map((item, idx) => `
+      <button type="button" class="w-full text-left px-3.5 py-2.5 hover:bg-[#fff5f0] transition-colors flex items-center justify-between text-xs group"
+              data-index="${idx}">
+        <div>
+          <div class="font-bold text-slate-800 group-hover:text-[#a43700]">${item.name}</div>
+          <div class="text-[11px] text-slate-500">${item.display_name}</div>
+        </div>
+        <span class="font-mono text-[10px] text-slate-400 group-hover:text-[#a43700]">${item.latitude}°N, ${item.longitude}°E</span>
+      </button>
+    `).join('');
+
+    dropdown.querySelectorAll('button').forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const item = results[idx];
+        setLocation(item.name, item.latitude, item.longitude, item.display_name, item.admin1);
+      });
+    });
+
+    dropdown.classList.remove('hidden');
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+
+  // Setup interactive card visual state sync
+  function setupOptionCards(containerId, activeClassList, inactiveClassList) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const cards = container.querySelectorAll('label');
+
+    function update() {
+      cards.forEach(card => {
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio && radio.checked) {
+          card.className = activeClassList;
+        } else {
+          card.className = inactiveClassList;
+        }
+      });
+    }
+
+    cards.forEach(card => {
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) {
+        radio.addEventListener('change', update);
+      }
+    });
+  }
+
+  setupOptionCards(
+    'age-group-options',
+    'age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all text-center',
+    'age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all text-center'
+  );
+
+  setupOptionCards(
+    'experience-options',
+    'exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all',
+    'exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all'
+  );
+
+  setupOptionCards(
+    'workload-options',
+    'work-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all',
+    'work-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all'
+  );
+
+  setupOptionCards(
+    'clothing-options',
+    'cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all',
+    'cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all'
+  );
+
+  setupOptionCards(
+    'recovery-options',
+    'rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all',
+    'rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all'
+  );
+
+  // Semicircular Gauge Needle Rotation (-90deg to +90deg)
+  function setGaugeNeedle(wbgt) {
+    const minWbgt = 20.0;
+    const maxWbgt = 36.0;
+    const clamped = Math.max(minWbgt, Math.min(wbgt, maxWbgt));
+    const ratio = (clamped - minWbgt) / (maxWbgt - minWbgt);
+    const degrees = -90 + ratio * 180;
+    const needleGroup = document.getElementById('gauge-needle-group');
+    if (needleGroup) {
+      needleGroup.style.transform = `rotate(${degrees}deg)`;
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Interactive Location Map Core Logic
+  // ──────────────────────────────────────────────────────────────────────────
+  function initLocationMap() {
+    const mapContainer = document.getElementById('location-map');
+    if (!mapContainer || locationMap) return;
+
+    const initialLat = parseFloat(selectedLatInput.value) || 17.3850;
+    const initialLon = parseFloat(selectedLonInput.value) || 78.4867;
+    currentMapCoords = [initialLat, initialLon];
+
+    locationMap = L.map('location-map', {
+      center: currentMapCoords,
+      zoom: 11,
+      scrollWheelZoom: false,
+      zoomControl: true,
+    });
+
+    // Standard OpenStreetMap base tiles (zero API key required)
+    tileLayer = (window.MAP_CONFIG && window.MAP_CONFIG.createTileLayer)
+      ? window.MAP_CONFIG.createTileLayer().addTo(locationMap)
+      : L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(locationMap);
+
+    tileLayer.on('tileerror', function() {
+      const errBanner = document.getElementById('map-tile-error');
+      if (errBanner) errBanner.classList.remove('hidden');
+    });
+
+    // Initial marker placement
+    updateMapMarker(initialLat, initialLon, selectedLocationInput.value || 'Hyderabad', 'Moderate', null);
+
+    // Re-center button listener
+    document.getElementById('recenter-map-btn')?.addEventListener('click', () => {
+      if (locationMap) {
+        locationMap.setView(currentMapCoords, 11, { animate: true });
+        if (currentMarker) currentMarker.openPopup();
+      }
+    });
+
+    // Retry map button
+    document.getElementById('retry-map-btn')?.addEventListener('click', () => {
+      const errBanner = document.getElementById('map-tile-error');
+      if (errBanner) errBanner.classList.add('hidden');
+      if (tileLayer) tileLayer.redraw();
+    });
+
+    // Window resize handler
+    window.addEventListener('resize', () => {
+      if (locationMap) locationMap.invalidateSize();
+    });
+  }
+
+  function createRiskMarkerIcon(riskCategory) {
+    const riskColors = {
+      'Low': '#2f9e44',
+      'Moderate': '#f2a900',
+      'High': '#e8590c',
+      'Very High': '#c1121f',
+      'Extreme': '#6a040f'
+    };
+    const color = riskColors[riskCategory] || '#a43700';
+
+    return L.divIcon({
+      className: 'risk-marker-container',
+      html: `
+        <div class="risk-marker-pin">
+          <div class="risk-marker-pulse" style="background-color: ${color};"></div>
+          <div class="risk-marker-core" style="background-color: ${color};"></div>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+      popupAnchor: [0, -14]
+    });
+  }
+
+  function buildMarkerPopupContent(data) {
+    const badgeClasses = {
+      'Low': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      'Moderate': 'bg-amber-100 text-amber-800 border-amber-300',
+      'High': 'bg-orange-100 text-orange-800 border-orange-300',
+      'Very High': 'bg-red-100 text-red-800 border-red-300',
+      'Extreme': 'bg-red-950 text-white border-red-900'
+    };
+    const bCls = badgeClasses[data.risk_category] || 'bg-slate-100 text-slate-800 border-slate-300';
+    
+    return `
+      <div class="p-3 bg-white text-slate-800 space-y-2 min-w-[210px]">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-1.5">
+          <span class="font-bold text-xs text-slate-900 truncate">${data.location}</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${bCls}">
+            ${data.risk_category}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 text-xs">
+          <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
+            <span class="text-[9px] uppercase font-bold text-slate-400 block">Outdoor WBGT</span>
+            <span class="font-mono font-bold text-slate-900">${data.wbgt_c.toFixed(1)}°C</span>
+            <span class="text-[9px] text-slate-500 block truncate">${data.wbgt_band}</span>
+          </div>
+          <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
+            <span class="text-[9px] uppercase font-bold text-slate-400 block">IMD Status</span>
+            <span class="font-bold text-slate-900 block truncate text-[11px]">${data.imd_status}</span>
+            <span class="text-[9px] text-slate-500 block truncate">${data.region}</span>
+          </div>
+          <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
+            <span class="text-[9px] uppercase font-bold text-slate-400 block">Ambient</span>
+            <span class="font-mono font-bold text-slate-900">${data.current_temp_c.toFixed(1)}°C</span>
+          </div>
+          <div class="bg-slate-50 p-1.5 rounded border border-slate-100">
+            <span class="text-[9px] uppercase font-bold text-slate-400 block">Vulnerability</span>
+            <span class="font-bold text-slate-900 capitalize text-[11px]">${data.vuln_level}</span>
+          </div>
+        </div>
+        <div class="bg-[#fff9f6] p-2 rounded-lg border border-[#fae6de] text-xs">
+          <span class="text-[9px] uppercase font-bold text-[#a43700] block mb-0.5">Recommended Action (ISO 7243)</span>
+          <div class="font-bold text-slate-900 text-xs">${data.work_minutes}m work / ${data.rest_minutes}m rest per hr</div>
+          <div class="text-[10px] text-slate-600 mt-0.5">${data.instruction}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateMapMarker(lat, lon, locationName, riskCategory, riskData) {
+    if (!locationMap) return;
+
+    currentMapCoords = [lat, lon];
+
+    if (currentMarker) {
+      locationMap.removeLayer(currentMarker);
+    }
+
+    const icon = createRiskMarkerIcon(riskCategory);
+    currentMarker = L.marker([lat, lon], { icon: icon }).addTo(locationMap);
+
+    if (riskData) {
+      const popupHtml = buildMarkerPopupContent(riskData);
+      currentMarker.bindPopup(popupHtml, {
+        className: 'location-map-popup',
+        closeButton: false,
+        autoPanPadding: [20, 20],
+        maxWidth: 280
+      }).openPopup();
+    } else {
+      currentMarker.bindPopup(`
+        <div class="p-2.5 text-center">
+          <strong class="text-xs text-slate-800 block">${locationName}</strong>
+          <span class="text-[10px] text-slate-500">Fetching live atmospheric risk...</span>
+        </div>
+      `, {
+        className: 'location-map-popup',
+        closeButton: false,
+        maxWidth: 200
+      });
+    }
+  }
+
+  function updateMapMetricsStrip(data) {
+    const wbgtElem = document.getElementById('map-stat-wbgt');
+    const bandElem = document.getElementById('map-stat-wbgt-band');
+    const imdElem = document.getElementById('map-stat-imd');
+    const regionElem = document.getElementById('map-stat-region');
+    const riskElem = document.getElementById('map-stat-risk');
+    const vulnElem = document.getElementById('map-stat-vuln');
+    const actionElem = document.getElementById('map-stat-action');
+
+    const tsLevel = data.thermal_stress_level || (data.thermal_stress && data.thermal_stress.thermal_stress_level) || data.wbgt_band;
+
+    if (wbgtElem) wbgtElem.textContent = `${data.wbgt_c.toFixed(1)}°C`;
+    if (bandElem) bandElem.textContent = `TS: ${tsLevel.toUpperCase()}`;
+    if (imdElem) imdElem.textContent = data.imd_status;
+    if (regionElem) regionElem.textContent = `Env Base: ${data.base_risk || data.environmental_risk || 'Normal'}`;
+
+    if (riskElem) {
+      const badgeClasses = {
+        'Low': 'badge-low',
+        'Moderate': 'badge-moderate',
+        'High': 'badge-high',
+        'Very High': 'badge-very-high',
+        'Extreme': 'badge-extreme'
+      };
+      riskElem.className = `inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${badgeClasses[data.risk_category] || 'badge-low'}`;
+      riskElem.textContent = `${data.risk_category} Risk`;
+    }
+
+    if (vulnElem) vulnElem.textContent = `Vuln: ${data.vuln_level}`;
+    if (actionElem) actionElem.textContent = `${data.work_minutes} min work / ${data.rest_minutes} min rest per hour (${data.instruction})`;
+  }
+
+  // Unified Risk Assessment Runner
+  async function runAssessment(scrollOnMobile = false) {
+    validationAlert.classList.add('hidden');
+
+    const location = selectedLocationInput.value.trim();
+    const lat = selectedLatInput.value ? parseFloat(selectedLatInput.value) : null;
+    const lon = selectedLonInput.value ? parseFloat(selectedLonInput.value) : null;
+    const admin1 = selectedAdmin1Input ? selectedAdmin1Input.value.trim() : '';
+
+    if (!location || lat === null || lon === null) {
+      validationAlertText.textContent = 'Please select a valid location in India using the search input or quick select pills.';
+      validationAlert.classList.remove('hidden');
+      return;
+    }
+
+    const ageGroupElem = form.querySelector('input[name="age_group"]:checked');
+    const expElem = form.querySelector('input[name="experience"]:checked');
+    const workElem = form.querySelector('input[name="work_intensity"]:checked');
+    const clothElem = form.querySelector('input[name="clothing"]:checked');
+    const recElem = form.querySelector('input[name="recovery_environment"]:checked');
+
+    if (!ageGroupElem || !expElem || !workElem || !clothElem) {
+      validationAlertText.textContent = 'Please make sure all required questions are answered before assessing.';
+      validationAlert.classList.remove('hidden');
+      return;
+    }
+
+    const payload = {
+      location: location,
+      latitude: lat,
+      longitude: lon,
+      admin1: admin1,
+      age_group: ageGroupElem.value,
+      experience: expElem.value,
+      work_intensity: workElem.value,
+      clothing: clothElem.value,
+      recovery_environment: recElem ? recElem.value : 'shade',
+    };
+
+    submitBtn.disabled = true;
+    btnText.textContent = 'Assessing Live Risk...';
+    btnSpinner.classList.remove('hidden');
+
+    const syncText = document.getElementById('map-sync-text');
+    if (syncText) syncText.textContent = 'Syncing...';
+
+    try {
+      const resp = await fetch('/api/check-risk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        showWeatherUnavailableState(data.error || 'Failed to assess heat risk. Please try again.');
+        return;
+      }
+
+      currentAssessmentResult = data;
+      renderResults(data, scrollOnMobile);
+      updateMapMarker(data.latitude, data.longitude, data.location, data.risk_category, data);
+      updateMapMetricsStrip(data);
+
+      if (locationMap) locationMap.invalidateSize();
+    } catch (err) {
+      showWeatherUnavailableState('Weather service is temporarily unavailable. Please verify your connection.');
+    } finally {
+      submitBtn.disabled = false;
+      btnText.textContent = 'Assess My Heat Risk';
+      btnSpinner.classList.add('hidden');
+    }
+  }
+
+  function showWeatherUnavailableState(errorMsg) {
+    currentAssessmentResult = null;
+
+    // Show alert
+    validationAlertText.textContent = errorMsg;
+    validationAlert.classList.remove('hidden');
+
+    // Hide results & empty state
+    resultsCard.classList.add('hidden');
+    emptyState.classList.add('hidden');
+
+    // Show explicit Weather Unavailable Card
+    const unavailCard = document.getElementById('weather-unavailable-card');
+    if (unavailCard) {
+      unavailCard.classList.remove('hidden');
+      const reasonElem = document.getElementById('weather-unavailable-reason');
+      if (reasonElem) reasonElem.textContent = errorMsg;
+    }
+
+    const staleBanner = document.getElementById('weather-stale-banner');
+    if (staleBanner) staleBanner.classList.add('hidden');
+
+    // Update Header Badges to Unavailable
+    const formBadge = document.getElementById('form-weather-badge');
+    const formBadgeText = document.getElementById('form-weather-badge-text');
+    const formBadgeDot = document.getElementById('form-weather-badge-dot');
+    if (formBadge) {
+      formBadge.className = 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-300';
+    }
+    if (formBadgeDot) {
+      formBadgeDot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+    }
+    if (formBadgeText) {
+      formBadgeText.textContent = 'Weather Unavailable';
+    }
+
+    // Update Hero Component to Explicit Unavailable State
+    const riskSummaryHero = document.getElementById('risk-summary-hero');
+    const riskSummaryIcon = document.getElementById('risk-summary-icon');
+    const riskSummaryLevel = document.getElementById('risk-summary-level');
+    const riskSummaryPeak = document.getElementById('risk-summary-peak-window');
+    const riskSummaryWhy = document.getElementById('risk-summary-why-text');
+    const riskSummaryAction = document.getElementById('risk-summary-action-text');
+    const riskSummaryFreshness = document.getElementById('risk-summary-freshness');
+    const riskSummaryConfidence = document.getElementById('risk-summary-confidence');
+    const riskSummarySync = document.getElementById('risk-summary-sync');
+    const riskSummarySyncText = document.getElementById('risk-summary-sync-text');
+
+    if (riskSummaryHero) {
+      riskSummaryHero.className = 'card p-6 bg-white border-2 border-rose-200 shadow-md relative overflow-hidden transition-all';
+    }
+    if (riskSummarySync) {
+      riskSummarySync.className = 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-300';
+      const dot = riskSummarySync.querySelector('span:first-child');
+      if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+    }
+    if (riskSummarySyncText) riskSummarySyncText.textContent = 'Unavailable';
+    if (riskSummaryFreshness) {
+      riskSummaryFreshness.textContent = 'Freshness: Unavailable';
+      riskSummaryFreshness.className = 'text-[11px] font-semibold text-rose-600';
+    }
+    if (riskSummaryConfidence) {
+      riskSummaryConfidence.textContent = 'Confidence: Unavailable';
+      riskSummaryConfidence.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-300';
+    }
+    if (riskSummaryIcon) riskSummaryIcon.textContent = '⚠️';
+    if (riskSummaryLevel) {
+      riskSummaryLevel.textContent = 'CURRENT WEATHER UNAVAILABLE';
+      riskSummaryLevel.className = 'text-2xl sm:text-3xl font-black tracking-tight text-rose-700';
+    }
+    if (riskSummaryPeak) riskSummaryPeak.textContent = '--';
+    if (riskSummaryWhy) {
+      riskSummaryWhy.textContent = 'Atmospheric observations could not be retrieved from the weather service. Scientific heat risk calculations cannot proceed without live meteorological inputs.';
+    }
+    if (riskSummaryAction) {
+      riskSummaryAction.textContent = 'Exercise baseline seasonal precautions. Reconnect or retry live weather assessment.';
+    }
+
+    // Update Map Status
+    const syncText = document.getElementById('map-sync-text');
+    const mapSyncInd = document.getElementById('map-sync-indicator');
+    if (syncText) syncText.textContent = 'Offline / Unavailable';
+    if (mapSyncInd) {
+      mapSyncInd.className = 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-300';
+      const dot = mapSyncInd.querySelector('span:first-child');
+      if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-500';
+    }
+
+    // Reset Map Strip Metrics to non-fabricated placeholders
+    const statWbgt = document.getElementById('map-stat-wbgt');
+    const statBand = document.getElementById('map-stat-wbgt-band');
+    const statImd = document.getElementById('map-stat-imd');
+    const statRegion = document.getElementById('map-stat-region');
+    const statRisk = document.getElementById('map-stat-risk');
+    const statVuln = document.getElementById('map-stat-vuln');
+    const statAction = document.getElementById('map-stat-action');
+
+    if (statWbgt) statWbgt.textContent = '--';
+    if (statBand) statBand.textContent = 'Unavailable';
+    if (statImd) statImd.textContent = 'Unavailable';
+    if (statRegion) statRegion.textContent = 'Regional IMD';
+    if (statRisk) {
+      statRisk.textContent = 'UNAVAILABLE';
+      statRisk.className = 'inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-rose-100 text-rose-800';
+    }
+    if (statVuln) statVuln.textContent = 'Vuln: --';
+    if (statAction) statAction.textContent = 'Weather data unavailable';
+  }
+
+  // Handle Form Submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await runAssessment(true);
+  });
+
+  // Explanation Depth Tab Switching (Quick / Detailed / Technical)
+  window.switchExplanationDepth = function(depth) {
+    const tabs = {
+      'quick': document.getElementById('tab-exp-quick'),
+      'detailed': document.getElementById('tab-exp-detailed'),
+      'technical': document.getElementById('tab-exp-technical'),
+    };
+    const containers = {
+      'quick': document.getElementById('exp-level-1-container'),
+      'detailed': document.getElementById('exp-level-2-container'),
+      'technical': document.getElementById('exp-level-3-container'),
+    };
+
+    const activeClass = 'px-3 py-1 rounded-lg text-xs font-bold bg-[#a43700] text-white shadow-xs transition-all';
+    const inactiveClass = 'px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition-all';
+
+    Object.keys(tabs).forEach(k => {
+      if (tabs[k]) {
+        if (k === depth) {
+          tabs[k].className = activeClass;
+          tabs[k].setAttribute('aria-selected', 'true');
+        } else {
+          tabs[k].className = inactiveClass;
+          tabs[k].setAttribute('aria-selected', 'false');
+        }
+      }
+      if (containers[k]) {
+        if (k === depth) {
+          containers[k].classList.remove('hidden');
+        } else {
+          containers[k].classList.add('hidden');
+        }
+      }
+    });
+  };
+
+  function renderResults(data, scrollOnMobile = false) {
+    emptyState.classList.add('hidden');
+    const unavailCard = document.getElementById('weather-unavailable-card');
+    if (unavailCard) unavailCard.classList.add('hidden');
+    resultsCard.classList.remove('hidden');
+
+    const isStale = (data.weather_status === 'stale_cache' || data.weather_status === 'stale' || data.freshness === 'STALE');
+    const sourceTimeStr = data.source_time || (data.source_transparency && data.source_transparency.updated) || (data.retrieved_at ? new Date(data.retrieved_at).toLocaleTimeString() : 'Recent Cache');
+
+    // Update Header Badges for Live vs Cached/Stale
+    const formBadge = document.getElementById('form-weather-badge');
+    const formBadgeText = document.getElementById('form-weather-badge-text');
+    const formBadgeDot = document.getElementById('form-weather-badge-dot');
+    if (formBadge) {
+      formBadge.className = isStale
+        ? 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-300'
+        : 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+    }
+    if (formBadgeDot) {
+      formBadgeDot.className = isStale
+        ? 'w-1.5 h-1.5 rounded-full bg-amber-500'
+        : 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+    }
+    if (formBadgeText) {
+      formBadgeText.textContent = isStale ? 'Cached / Stale' : 'Live Weather';
+    }
+
+    // Stale notice banner
+    const staleBanner = document.getElementById('weather-stale-banner');
+    const staleTimeElem = document.getElementById('weather-stale-timestamp');
+    if (staleBanner) {
+      if (isStale) {
+        staleBanner.classList.remove('hidden');
+        if (staleTimeElem) staleTimeElem.textContent = `Observed: ${sourceTimeStr}`;
+      } else {
+        staleBanner.classList.add('hidden');
+      }
+    }
+
+    // Update Map sync indicator
+    const syncText = document.getElementById('map-sync-text');
+    const mapSyncInd = document.getElementById('map-sync-indicator');
+    if (syncText) syncText.textContent = isStale ? `Cached/Stale (${sourceTimeStr})` : 'Live Weather';
+    if (mapSyncInd) {
+      mapSyncInd.className = isStale
+        ? 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-300'
+        : 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+      const dot = mapSyncInd.querySelector('span:first-child');
+      if (dot) dot.className = isStale ? 'w-1.5 h-1.5 rounded-full bg-amber-500' : 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+    }
+
+    // Hero sync text & freshness & confidence
+    const riskSummarySync = document.getElementById('risk-summary-sync');
+    const riskSummarySyncText = document.getElementById('risk-summary-sync-text');
+    const riskSummaryFreshness = document.getElementById('risk-summary-freshness');
+    const riskSummaryConfidence = document.getElementById('risk-summary-confidence');
+
+    if (riskSummarySync) {
+      riskSummarySync.className = isStale
+        ? 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300'
+        : 'inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+      const dot = riskSummarySync.querySelector('span:first-child');
+      if (dot) dot.className = isStale ? 'w-1.5 h-1.5 rounded-full bg-amber-500' : 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+    }
+    if (riskSummarySyncText) {
+      riskSummarySyncText.textContent = isStale ? 'Cached / Stale' : 'Live Weather';
+    }
+
+    if (riskSummaryFreshness) {
+      if (isStale) {
+        riskSummaryFreshness.textContent = `⚠️ Freshness: Stale (${sourceTimeStr})`;
+        riskSummaryFreshness.className = 'text-[11px] font-semibold text-amber-700';
+      } else {
+        riskSummaryFreshness.textContent = 'Freshness: Live Atmospheric Data';
+        riskSummaryFreshness.className = 'text-[11px] font-medium text-slate-500';
+      }
+    }
+
+    if (riskSummaryConfidence) {
+      let rawConf = typeof data.confidence === 'string' ? data.confidence : (data.confidence?.level || data.data_quality?.confidence_level || 'High');
+      if (isStale) {
+        if (rawConf === 'High') rawConf = 'Medium';
+        riskSummaryConfidence.textContent = `Confidence: ${rawConf} (Downgraded - Stale)`;
+        riskSummaryConfidence.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300';
+      } else {
+        riskSummaryConfidence.textContent = `Confidence: ${rawConf}`;
+        riskSummaryConfidence.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200';
+      }
+    }
+
+    const badgeClasses = {
+      'Low': 'badge-low',
+      'Moderate': 'badge-moderate',
+      'High': 'badge-high',
+      'Very High': 'badge-very-high',
+      'Extreme': 'badge-extreme'
+    };
+
+    const accessibleIcons = {
+      'Low': '🟢',
+      'Moderate': '🟡',
+      'High': '🟠',
+      'Very High': '🔴',
+      'Extreme': '🟣'
+    };
+
+    const tsLevel = data.thermal_stress_level || (data.thermal_stress && data.thermal_stress.thermal_stress_level) || 'Moderate';
+    const tsDesc = data.thermal_stress_description || (data.thermal_stress && data.thermal_stress.thermal_stress_description) || 'Calculated from live atmospheric parameters.';
+    const env = data.environmental_conditions || (data.thermal_stress && data.thermal_stress.environmental_conditions) || {};
+
+    // 0. Update Reusable Risk Summary Hero Component
+    const riskLevel = data.risk_level || data.personal_risk || 'Low';
+    const riskSummaryHero = document.getElementById('risk-summary-hero');
+    const riskSummaryIcon = document.getElementById('risk-summary-icon');
+    const riskSummaryLevel = document.getElementById('risk-summary-level');
+    const riskSummaryPeak = document.getElementById('risk-summary-peak-window');
+    const riskSummaryWhy = document.getElementById('risk-summary-why-text');
+    const riskSummaryAction = document.getElementById('risk-summary-action-text');
+
+    if (riskSummaryHero) {
+      riskSummaryHero.className = `card p-6 bg-white border border-slate-200 shadow-md relative overflow-hidden transition-all risk-card-${riskLevel.toLowerCase().replace(/\s+/g, '-')}`;
+    }
+    if (riskSummaryIcon) riskSummaryIcon.textContent = accessibleIcons[riskLevel] || '🟢';
+    if (riskSummaryLevel) {
+      riskSummaryLevel.textContent = `${riskLevel.toUpperCase()} RISK`;
+      riskSummaryLevel.className = `text-2xl sm:text-3xl font-black tracking-tight ${riskLevel === 'Extreme' ? 'text-[#6a040f]' : riskLevel === 'Very High' ? 'text-[#c1121f]' : riskLevel === 'High' ? 'text-[#e8590c]' : riskLevel === 'Moderate' ? 'text-[#b45309]' : 'text-[#2f9e44]'}`;
+    }
+    if (riskSummaryPeak) {
+      const peakWin = (data.peak_risk_windows && data.peak_risk_windows.peak_window) || (data.decision_timeline && data.decision_timeline.peak_window) || '12:00 – 16:00';
+      riskSummaryPeak.textContent = peakWin;
+    }
+    if (riskSummaryWhy) {
+      const whySummary = (data.tiered_explanations && data.tiered_explanations.quick_summary) || data.summary || "High ambient heat load exceeds standard cooling thresholds.";
+      riskSummaryWhy.textContent = whySummary;
+    }
+    if (riskSummaryAction) {
+      const actionText = (data.traceable_recommendations && data.traceable_recommendations[0] && data.traceable_recommendations[0].action) || data.recommendation || "Take mandated rest breaks in cool or shaded environments.";
+      riskSummaryAction.textContent = actionText;
+    }
+
+    // 1. Thermal Stress Index Card Elements
+    const tsBadge = document.getElementById('thermal-stress-badge');
+    if (tsBadge) {
+      tsBadge.className = `px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeClasses[tsLevel] || 'badge-low'} shadow-xs`;
+      tsBadge.textContent = `THERMAL STRESS: ${tsLevel.toUpperCase()}`;
+    }
+
+    const tsVal = document.getElementById('ts-wbgt-value');
+    if (tsVal) tsVal.textContent = data.wbgt_c.toFixed(1);
+
+    const tsBandBadge = document.getElementById('res-wbgt-band-badge');
+    if (tsBandBadge) tsBandBadge.textContent = `${data.wbgt_band} Zone`;
+
+    const tsInterp = document.getElementById('ts-interpretation');
+    if (tsInterp) tsInterp.textContent = tsDesc;
+
+    // Environmental conditions display
+    const envTemp = document.getElementById('ts-env-temp');
+    if (envTemp) envTemp.textContent = `${(env.temp_c !== undefined ? env.temp_c : data.current_temp_c).toFixed(1)} °C`;
+
+    const envRh = document.getElementById('ts-env-rh');
+    if (envRh) envRh.textContent = env.rh_pct !== undefined ? `${env.rh_pct.toFixed(1)} %` : '-- %';
+
+    const envWind = document.getElementById('ts-env-wind');
+    if (envWind) envWind.textContent = env.wind_ms !== undefined ? `${env.wind_ms.toFixed(1)} m/s` : '-- m/s';
+
+    const envSolar = document.getElementById('ts-env-solar');
+    if (envSolar) envSolar.textContent = env.solar_wm2 !== undefined ? `${env.solar_wm2.toFixed(1)} W/m²` : '-- W/m²';
+
+    // 2. Gauge update
+    document.getElementById('gauge-wbgt-text').textContent = `${data.wbgt_c.toFixed(1)}°`;
+    setGaugeNeedle(data.wbgt_c);
+
+    // 3. Three Concepts Separation Tier Stepper Elements
+    const tierABadge = document.getElementById('tier-a-badge');
+    if (tierABadge) {
+      tierABadge.className = `px-1.5 py-0.5 rounded text-[10px] font-bold ${badgeClasses[tsLevel] || 'badge-low'}`;
+      tierABadge.textContent = tsLevel;
+    }
+    const tierAVal = document.getElementById('tier-a-val');
+    if (tierAVal) tierAVal.textContent = `${data.wbgt_c.toFixed(1)} °C WBGT`;
+
+    const tierBBadge = document.getElementById('tier-b-badge');
+    const baseRisk = data.base_risk || data.environmental_risk || 'Low';
+    if (tierBBadge) {
+      tierBBadge.className = `px-1.5 py-0.5 rounded text-[10px] font-bold ${badgeClasses[baseRisk] || 'badge-low'}`;
+      tierBBadge.textContent = baseRisk;
+    }
+    const tierBVal = document.getElementById('tier-b-val');
+    if (tierBVal) tierBVal.textContent = `${baseRisk} Environmental Risk`;
+    const tierBImd = document.getElementById('tier-b-imd');
+    if (tierBImd) tierBImd.textContent = `IMD: ${data.imd_status} in ${data.region} region`;
+
+    const tierCBadge = document.getElementById('tier-c-badge');
+    if (tierCBadge) {
+      tierCBadge.className = `px-1.5 py-0.5 rounded text-[10px] font-bold ${badgeClasses[data.risk_category] || 'badge-low'}`;
+      tierCBadge.textContent = data.risk_category;
+    }
+    const tierCVal = document.getElementById('tier-c-val');
+    if (tierCVal) tierCVal.textContent = `${data.risk_category} Personal Risk`;
+    const tierCVuln = document.getElementById('tier-c-vuln');
+    if (tierCVuln) tierCVuln.textContent = `Vulnerability: ${data.vuln_level}`;
+
+    // 4. Personalized Result Card Elements & Header
+    document.getElementById('res-location-heading').textContent = data.location;
+    const badge = document.getElementById('risk-badge');
+    badge.className = `px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeClasses[data.risk_category] || 'badge-low'} shadow-xs`;
+    const icon = accessibleIcons[data.risk_category] || '⚠️';
+    badge.textContent = `${icon} ${data.risk_category.toUpperCase()} RISK`;
+
+    document.getElementById('res-pill-age').textContent = `Age: ${data.age_group}`;
+    const expLabels = { 'very_used': 'Very Used', 'somewhat_used': 'Somewhat', 'not_used': 'Not Used' };
+    document.getElementById('res-pill-exp').textContent = `Heat Exp: ${expLabels[data.experience] || data.experience}`;
+    document.getElementById('res-pill-work').textContent = `Work: ${data.workload_label || data.work_intensity}`;
+    document.getElementById('res-pill-cloth').textContent = `Gear: ${data.clothing_label || data.clothing}`;
+    document.getElementById('res-pill-region').textContent = `Region: ${data.region}`;
+
+    // Plain-English operational summary (Level 1)
+    const quickWhy = data.level_1_quick || (data.explanation && data.explanation.level_1_quick) || data.summary;
+    document.getElementById('res-summary').textContent = quickWhy;
+    const whyCallout = document.getElementById('res-quick-why');
+    if (whyCallout) {
+      whyCallout.textContent = quickWhy;
+    }
+
+    // 4B. Explainable Decision Intelligence Components
+    // Pipeline Steps
+    const stepInputs = document.getElementById('trace-step-inputs');
+    if (stepInputs) {
+      stepInputs.textContent = `${(env.temp_c !== undefined ? env.temp_c : data.current_temp_c).toFixed(1)}°C, ${env.rh_pct ? env.rh_pct.toFixed(0) : '--'}% RH`;
+    }
+    const stepWbgt = document.getElementById('trace-step-wbgt');
+    if (stepWbgt) {
+      stepWbgt.textContent = `${data.wbgt_c.toFixed(1)}°C (${data.wbgt_band || tsLevel})`;
+    }
+    const stepImd = document.getElementById('trace-step-imd');
+    if (stepImd) {
+      stepImd.textContent = `${data.imd_status} (${data.region})`;
+    }
+    const stepVuln = document.getElementById('trace-step-vuln');
+    if (stepVuln) {
+      stepVuln.textContent = `${data.vuln_level} (${data.workload_label || data.work_intensity})`;
+    }
+    const stepFinal = document.getElementById('trace-step-final');
+    if (stepFinal) {
+      stepFinal.textContent = `${data.risk_category} (${data.recommendation_level || 'Controls'})`;
+    }
+
+    // Triggered Decision Rules List
+    const rulesList = document.getElementById('res-triggered-rules-list');
+    if (rulesList) {
+      const trace = data.decision_trace || {};
+      const rules = trace.triggered_rules || [];
+      if (rules.length > 0) {
+        rulesList.innerHTML = rules.map(r => `
+          <div class="p-2 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs gap-1.5 min-w-0">
+            <div class="min-w-0 break-words flex-1">
+              <span class="font-mono font-bold text-[#a43700] text-[11px]">${r.rule_id}</span>:
+              <span class="font-medium text-slate-800 break-words">${r.description || r.condition || ''}</span>
+              ${r.outcome ? `<span class="text-slate-400 mx-1">-></span><span class="font-semibold text-slate-900 break-words">${r.outcome}</span>` : ''}
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono flex-shrink-0">${r.standard || 'ISO/ACGIH'}</span>
+          </div>
+        `).join('');
+      } else {
+        rulesList.innerHTML = `
+          <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+            <span class="font-mono font-bold text-[#a43700]">RULE_BASELINE_SCREEN</span>: ISO 7243 environmental evaluation within baseline bounds.
+          </div>
+        `;
+      }
+    }
+
+    // Primary Drivers (Material Determinants)
+    const primaryList = document.getElementById('res-primary-drivers-list');
+    if (primaryList) {
+      const drivers = data.primary_drivers || [];
+      if (drivers.length > 0) {
+        primaryList.innerHTML = drivers.map(d => {
+          if (typeof d === 'string') {
+            const parts = d.split(':');
+            const title = parts.length > 1 ? parts[0].trim() : 'Environmental Heat Load';
+            const detail = parts.length > 1 ? parts.slice(1).join(':').trim() : d;
+            return `
+              <li class="p-2.5 rounded-lg bg-white border border-red-100 shadow-2xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-red-950 text-xs">${title}</span>
+                  <span class="text-[10px] font-mono text-red-600 font-semibold uppercase">Primary</span>
+                </div>
+                <p class="text-slate-800 text-[11px] leading-snug">${detail}</p>
+              </li>
+            `;
+          }
+          return `
+            <li class="p-2.5 rounded-lg bg-white border border-red-100 shadow-2xs space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-red-950 text-xs">${d.name || 'Primary Determinant'}</span>
+                <span class="text-[10px] font-mono text-red-600 font-semibold uppercase">Primary</span>
+              </div>
+              <p class="text-slate-800 text-[11px] leading-snug">${d.evidence || d.description || ''}</p>
+              ${d.mechanism ? `<div class="text-[10px] text-red-700/90 font-medium">Mechanism: ${d.mechanism}</div>` : ''}
+            </li>
+          `;
+        }).join('');
+      } else {
+        primaryList.innerHTML = '<li class="text-xs text-slate-500 italic p-2">Ambient and operational conditions within acceptable reference range.</li>';
+      }
+    }
+
+    // Contributing Factors (Secondary Burden)
+    const contribList = document.getElementById('res-contributing-factors-list');
+    if (contribList) {
+      const contribs = data.contributing_factors || [];
+      if (contribs.length > 0) {
+        contribList.innerHTML = contribs.map(c => {
+          if (typeof c === 'string') {
+            const parts = c.split(':');
+            const title = parts.length > 1 ? parts[0].trim() : 'Operational Factor';
+            const detail = parts.length > 1 ? parts.slice(1).join(':').trim() : c;
+            return `
+              <li class="p-2.5 rounded-lg bg-white border border-amber-100 shadow-2xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-amber-950 text-xs">${title}</span>
+                  <span class="text-[10px] font-mono text-amber-700 font-semibold uppercase">Contributing</span>
+                </div>
+                <p class="text-slate-800 text-[11px] leading-snug">${detail}</p>
+              </li>
+            `;
+          }
+          return `
+            <li class="p-2.5 rounded-lg bg-white border border-amber-100 shadow-2xs space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-amber-950 text-xs">${c.name || 'Contributing Factor'}</span>
+                <span class="text-[10px] font-mono text-amber-700 font-semibold uppercase">Contributing</span>
+              </div>
+              <p class="text-slate-800 text-[11px] leading-snug">${c.evidence || c.description || ''}</p>
+              ${c.mechanism ? `<div class="text-[10px] text-amber-800/90 font-medium">Mechanism: ${c.mechanism}</div>` : ''}
+            </li>
+          `;
+        }).join('');
+      } else {
+        contribList.innerHTML = '<li class="text-xs text-slate-500 italic p-2">No secondary compounding physiological or environmental factors.</li>';
+      }
+    }
+
+    // Protective Factors (Risk Dampeners)
+    const protectList = document.getElementById('res-protective-factors-list');
+    if (protectList) {
+      const protects = data.protective_factors || [];
+      if (protects.length > 0) {
+        protectList.innerHTML = protects.map(p => {
+          if (typeof p === 'string') {
+            const parts = p.split(':');
+            const title = parts.length > 1 ? parts[0].trim() : 'Protective Factor';
+            const detail = parts.length > 1 ? parts.slice(1).join(':').trim() : p;
+            return `
+              <li class="p-2.5 rounded-lg bg-white border border-emerald-100 shadow-2xs space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-emerald-950 text-xs">${title}</span>
+                  <span class="text-[10px] font-mono text-emerald-700 font-semibold uppercase">Defense</span>
+                </div>
+                <p class="text-slate-800 text-[11px] leading-snug">${detail}</p>
+              </li>
+            `;
+          }
+          return `
+            <li class="p-2.5 rounded-lg bg-white border border-emerald-100 shadow-2xs space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-emerald-950 text-xs">${p.name || 'Protective Factor'}</span>
+                <span class="text-[10px] font-mono text-emerald-700 font-semibold uppercase">Defense</span>
+              </div>
+              <p class="text-slate-800 text-[11px] leading-snug">${p.evidence || p.description || ''}</p>
+              ${p.mechanism ? `<div class="text-[10px] text-emerald-700 font-medium">Benefit: ${p.mechanism}</div>` : ''}
+            </li>
+          `;
+        }).join('');
+      } else {
+        protectList.innerHTML = '<li class="text-xs text-slate-500 italic p-2">No active physiological or operational heat-dampening factors detected.</li>';
+      }
+    }
+
+    // Counterfactual Factor Sensitivities (What Can Change?)
+    const sensList = document.getElementById('res-factor-sensitivities-list');
+    if (sensList) {
+      const sensitivities = data.factor_sensitivities || [];
+      if (sensitivities.length > 0) {
+        sensList.innerHTML = sensitivities.map(s => {
+          let badgeHtml = '';
+          let borderClass = 'border-slate-200 bg-slate-50/60';
+          if (s.impact_type === 'CATEGORY_CHANGE') {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">Category Relieved (${s.current_category} -> ${s.target_category})</span>`;
+            borderClass = 'border-emerald-200 bg-emerald-50/40';
+          } else if (s.impact_type === 'RECOMMENDATION_CHANGE') {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">Work/Rest Relieved</span>`;
+            borderClass = 'border-blue-200 bg-blue-50/40';
+          } else {
+            badgeHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300">No Category Change</span>`;
+            borderClass = 'border-slate-200 bg-slate-50/60';
+          }
+
+          return `
+            <div class="p-3 rounded-xl border ${borderClass} shadow-2xs space-y-1.5 transition-all">
+              <div class="flex flex-wrap items-center justify-between gap-1.5">
+                <span class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                  <span>🎛️ ${s.factor}</span>
+                  <span class="text-slate-500 font-normal">(${s.current_value} <span class="text-slate-400">-></span> <strong class="text-slate-900 font-bold">${s.target_value}</strong>)</span>
+                </span>
+                ${badgeHtml}
+              </div>
+              <p class="text-xs text-slate-700 font-medium leading-relaxed">
+                ${s.explanation || s.physical_explanation}
+              </p>
+              <div class="text-[11px] text-slate-500 flex items-center space-x-1">
+                <span class="font-semibold text-slate-600">Physical mechanism:</span>
+                <span>${s.physical_explanation}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        sensList.innerHTML = '<div class="text-xs text-slate-500 italic p-2">No counterfactual sensitivities evaluated for this profile.</div>';
+      }
+    }
+
+    // Plain English Uncertainty & Limitations
+    const uncertaintyList = document.getElementById('res-plain-uncertainty-list');
+    if (uncertaintyList) {
+      const uncerts = data.plain_english_uncertainty || (data.explanation && data.explanation.level_2_detailed && data.explanation.level_2_detailed.uncertainty_and_limitations) || [
+        "Single-point surface weather observation used; local microclimates (e.g. enclosed unventilated spaces) can elevate thermal stress beyond baseline measurements.",
+        "Individual physiological heat tolerance varies significantly with pre-existing hydration, medication, and sleep status.",
+        "Recommendations serve as occupational screening guidance and do not replace individualized medical advice."
+      ];
+      uncertaintyList.innerHTML = uncerts.map(u => `<li>${u}</li>`).join('');
+    }
+
+    const confTag = document.getElementById('res-confidence-tag');
+    if (confTag) {
+      const confLevel = (data.confidence && data.confidence.level) || data.confidence_label || (data.data_quality && data.data_quality.confidence_level) || 'High';
+      confTag.textContent = `Confidence: ${confLevel}`;
+      if (confLevel === 'High') {
+        confTag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
+      } else if (confLevel === 'Medium') {
+        confTag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300';
+      } else {
+        confTag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-300';
+      }
+    }
+
+    const freshnessTag = document.getElementById('res-freshness-tag');
+    if (freshnessTag) {
+      const freshness = data.freshness || (data.source_transparency && data.source_transparency.freshness) || 'FRESH';
+      if (freshness === 'STALE') {
+        freshnessTag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-400';
+        freshnessTag.textContent = '⚠️ Stale Observation';
+      } else if (freshness === 'UNKNOWN') {
+        freshnessTag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300';
+        freshnessTag.textContent = 'Timestamp Unknown';
+      } else {
+        freshnessTag.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300';
+        freshnessTag.textContent = '● Live Fresh';
+      }
+    }
+
+    const srcName = document.getElementById('res-source-name');
+    const srcRes = document.getElementById('res-source-res');
+    const srcTime = document.getElementById('res-source-time');
+    const st = data.source_transparency || {};
+    if (srcName) srcName.textContent = st.source || 'Open-Meteo Atmospheric Services';
+    if (srcRes) srcRes.textContent = st.spatial_resolution || 'Surface Level (2m/10m)';
+    if (srcTime) srcTime.textContent = st.updated || data.source_time || 'Just now';
+
+    // Level 3 Technical / Audit Trace JSON
+    const techPre = document.getElementById('res-technical-trace-pre');
+    if (techPre) {
+      techPre.textContent = JSON.stringify(data.decision_trace || data, null, 2);
+    }
+
+    // 5. Work / Rest & Exposure Intervention Guidance Card
+    const recLevel = data.recommendation_level || 'Normal precautions';
+    const recLevelBadge = document.getElementById('res-rec-level-badge');
+    const recLevelText = document.getElementById('res-rec-level');
+
+    const recLevelStyles = {
+      'Normal precautions': { badge: 'bg-emerald-100 text-emerald-800 border-emerald-300', text: 'text-emerald-700' },
+      'Enhanced precautions': { badge: 'bg-amber-100 text-amber-800 border-amber-300', text: 'text-amber-700' },
+      'Frequent recovery needed': { badge: 'bg-orange-100 text-orange-800 border-orange-300', text: 'text-orange-700' },
+      'High-exposure controls required': { badge: 'bg-red-100 text-red-800 border-red-300', text: 'text-red-700' },
+      'Suspend/defer strenuous exposure pending site assessment': { badge: 'bg-red-950 text-white border-red-900', text: 'text-red-900' },
+      'Site-specific assessment required': { badge: 'bg-purple-100 text-purple-900 border-purple-300', text: 'text-purple-800' },
+    };
+    const styleObj = recLevelStyles[recLevel] || { badge: 'bg-slate-100 text-slate-800 border-slate-300', text: 'text-[#a43700]' };
+
+    if (recLevelBadge) {
+      recLevelBadge.className = `px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border shadow-2xs ${styleObj.badge}`;
+      recLevelBadge.textContent = recLevel;
+    }
+    if (recLevelText) {
+      recLevelText.className = `font-black ${styleObj.text}`;
+      recLevelText.textContent = recLevel;
+    }
+
+    const workGuidanceElem = document.getElementById('res-work-guidance');
+    if (workGuidanceElem) {
+      workGuidanceElem.textContent = data.work_guidance || data.instruction || 'Standard pacing with scheduled hydration.';
+    }
+
+    const recoveryGuidanceElem = document.getElementById('res-recovery-guidance');
+    if (recoveryGuidanceElem) {
+      recoveryGuidanceElem.textContent = data.recovery_guidance || 'Rest in shaded or cooled area with adequate airflow.';
+    }
+
+    // Contextual Schedule Windows
+    const schedCtx = data.schedule_context || (data.work_rest_guidance && data.work_rest_guidance.schedule_context) || {};
+    const workWinElem = document.getElementById('res-work-window');
+    if (workWinElem) {
+      workWinElem.textContent = schedCtx.work_window || `${data.work_minutes} min sustained work`;
+    }
+    const recWinElem = document.getElementById('res-recovery-window');
+    if (recWinElem) {
+      recWinElem.textContent = schedCtx.recovery_window || `${data.rest_minutes} min active recovery`;
+    }
+
+    // Basis chips
+    const basisChipsContainer = document.getElementById('res-basis-chips');
+    if (basisChipsContainer) {
+      const basisList = (data.work_rest_guidance && data.work_rest_guidance.recommendation_basis)
+        || data.recommendation_basis
+        || (data.exposure_context && [
+            `WBGT: ${data.exposure_context.environment ? data.exposure_context.environment.wbgt_c + '°C' : data.wbgt_c + '°C'}`,
+            `Workload: ${data.exposure_context.work ? data.exposure_context.work.workload_label : data.work_intensity}`,
+            `Gear: ${data.exposure_context.clothing_and_ppe ? data.exposure_context.clothing_and_ppe.clothing_type : data.clothing}`,
+            `Recovery: ${data.exposure_context.recovery_environment ? data.exposure_context.recovery_environment.environment_type : 'Shade'}`
+          ])
+        || ['Environmental Baseline'];
+
+      basisChipsContainer.innerHTML = basisList.map(b => `
+        <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-semibold border border-slate-300 text-[10px]">${b}</span>
+      `).join('');
+    }
+
+    // Hourly indicative work/rest minutes & bar
+    document.getElementById('res-work-min').textContent = data.work_minutes;
+    document.getElementById('res-rest-min').textContent = data.rest_minutes;
+
+    const workPct = Math.round((data.work_minutes / 60) * 100);
+    const restPct = 100 - workPct;
+    const barWork = document.getElementById('bar-work');
+    const barRest = document.getElementById('bar-rest');
+    barWork.style.width = `${workPct}%`;
+    barRest.style.width = `${restPct}%`;
+    document.getElementById('bar-split-text').textContent = `Work: ${data.work_minutes}m | Rest: ${data.rest_minutes}m`;
+
+    const riskColors = {
+      'Low': '#2f9e44',
+      'Moderate': '#f2a900',
+      'High': '#e8590c',
+      'Very High': '#c1121f',
+      'Extreme': '#6a040f',
+    };
+    barWork.style.backgroundColor = riskColors[data.risk_category] || '#2f9e44';
+
+    document.getElementById('res-instruction').textContent = data.instruction;
+
+    // Forecast Peak-Risk Exposure Window Banner
+    const peakWin = data.peak_risk_window || (data.work_rest_guidance && data.work_rest_guidance.peak_risk_window);
+    const peakMsg = document.getElementById('res-peak-message');
+    const peakStatusBadge = document.getElementById('res-peak-status-badge');
+    const peakWindowsList = document.getElementById('res-peak-windows-list');
+
+    if (peakWin && peakMsg && peakStatusBadge && peakWindowsList) {
+      peakStatusBadge.textContent = peakWin.status || 'Hourly Analysis';
+      peakMsg.textContent = peakWin.message || 'Operational schedule timing based on diurnal heat curve.';
+
+      const windows = peakWin.peak_windows || [];
+      if (windows.length > 0) {
+        peakWindowsList.innerHTML = windows.map(w => `
+          <div class="flex items-center justify-between p-2 rounded bg-white/80 border border-amber-200 text-xs">
+            <span class="font-bold text-amber-950">${w.time_window || w.window || 'Window'}:</span>
+            <span class="font-semibold text-amber-900">${w.action || w.description || w.level}</span>
+          </div>
+        `).join('');
+      } else if (peakWin.suggested_shift_adjustment) {
+        peakWindowsList.innerHTML = `
+          <div class="p-2 rounded bg-white/80 border border-amber-200 text-xs text-amber-900">
+            <strong class="font-semibold">Shift Timing Advice:</strong> ${peakWin.suggested_shift_adjustment}
+          </div>
+        `;
+      } else {
+        peakWindowsList.innerHTML = `
+          <div class="p-2 rounded bg-white/80 border border-amber-200 text-xs text-amber-800 italic">
+            Single-point weather observation active. For hourly peak-exposure windows, check the 5-Day Forecast.
+          </div>
+        `;
+      }
+    }
+
+    // Recommended Operational Controls (Categorized cards with traceable reasons)
+    const controlsContainer = document.getElementById('res-recommended-controls');
+    if (controlsContainer) {
+      const controls = data.recommended_controls || [];
+      if (controls.length > 0) {
+        const categoryIcons = {
+          'HYDRATION': '💧',
+          'SCHEDULING': '⏰',
+          'RECOVERY': '🪑',
+          'WORKLOAD': '⚡',
+          'ACCLIMATIZATION': '📈',
+          'MONITORING': '👀',
+          'CLOTHING_PPE': '🦺'
+        };
+        const priorityBadges = {
+          'mandatory': 'bg-red-100 text-red-800 border-red-300',
+          'priority': 'bg-amber-100 text-amber-800 border-amber-300',
+          'recommended': 'bg-blue-100 text-blue-800 border-blue-300',
+          'good_practice': 'bg-slate-100 text-slate-700 border-slate-200'
+        };
+
+        controlsContainer.innerHTML = controls.map(c => `
+          <div class="p-3 rounded-xl border border-slate-200 bg-white hover:border-[#a43700]/40 transition-all shadow-2xs space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                <span>${categoryIcons[c.category] || '📌'}</span>
+                <span>${c.title}</span>
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${priorityBadges[c.priority] || priorityBadges['recommended']}">
+                ${c.priority || 'recommended'}
+              </span>
+            </div>
+            <p class="text-xs text-slate-700 leading-snug font-medium">
+              ${c.action}
+            </p>
+            ${c.reason ? `
+              <div class="pt-1 text-[11px] text-slate-500 flex items-center space-x-1">
+                <span class="font-semibold text-slate-600">Basis:</span>
+                <span>${c.reason}</span>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      } else {
+        controlsContainer.innerHTML = `
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600">
+            Standard occupational precautions apply. Maintain accessible water and shaded rest breaks.
+          </div>
+        `;
+      }
+    }
+
+    // Operational Limitations & Disclaimers
+    const limitationsList = document.getElementById('res-limitations-list');
+    if (limitationsList) {
+      const lims = data.limitations || [
+        "Recommendations serve as occupational screening guidance and do not constitute individualized medical prescriptions or universal safety guarantees.",
+        "Individual physiological heat tolerance varies significantly based on hydration, health status, and prior heat exposure."
+      ];
+      limitationsList.innerHTML = lims.map(l => `<li>${l}</li>`).join('');
+    }
+
+    // Update Cross-Module Shortcuts with active location and exposure parameters
+    const forecastLink = document.getElementById('res-forecast-link');
+    if (forecastLink) {
+      const recRadio = form.querySelector('input[name="recovery_environment"]:checked');
+      const recVal = data.recovery_environment || (recRadio ? recRadio.value : 'shade');
+      forecastLink.href = `/forecast?location=${encodeURIComponent(data.location)}&latitude=${data.latitude}&longitude=${data.longitude}&age_group=${encodeURIComponent(data.age_group)}&experience=${data.experience}&workload=${data.work_intensity}&clothing=${data.clothing}&recovery_environment=${recVal}`;
+    }
+    const whatifLink = document.getElementById('res-whatif-link');
+    if (whatifLink) {
+      whatifLink.href = `/what-if?location=${encodeURIComponent(data.location)}&latitude=${data.latitude}&longitude=${data.longitude}`;
+    }
+    const coolingLink = document.getElementById('res-cooling-link');
+    if (coolingLink) {
+      coolingLink.href = `/cooling-stations?city=${encodeURIComponent(data.location)}`;
+    }
+    const alertsLink = document.getElementById('res-alerts-link');
+    if (alertsLink) {
+      alertsLink.href = `/alerts?location=${encodeURIComponent(data.location)}&risk=${encodeURIComponent(data.risk_category || 'Moderate')}`;
+    }
+
+    // Scroll results into view on mobile
+    if (scrollOnMobile && window.innerWidth < 1024) {
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    updateStickyFormOffset();
+  }
+
+  // Scenario Presets (for Presentation Mode)
+  window.applyScenarioPreset = function(presetKey) {
+    if (presetKey === 'delhi_laborer') {
+      const [lat, lon, disp, admin1] = PRESET_COORDS['Delhi'];
+      setLocation('Delhi', lat, lon, disp, admin1);
+      form.querySelector('input[name="age_group"][value="18–40"]').checked = true;
+      form.querySelector('input[name="experience"][value="very_used"]').checked = true;
+      form.querySelector('input[name="work_intensity"][value="heavy"]').checked = true;
+      form.querySelector('input[name="clothing"][value="heavy"]').checked = true;
+      const rec = form.querySelector('input[name="recovery_environment"][value="outdoor_direct"]');
+      if (rec) rec.checked = true;
+    } else if (presetKey === 'hyderabad_senior') {
+      const [lat, lon, disp, admin1] = PRESET_COORDS['Hyderabad'];
+      setLocation('Hyderabad', lat, lon, disp, admin1);
+      form.querySelector('input[name="age_group"][value="60+"]').checked = true;
+      form.querySelector('input[name="experience"][value="not_used"]').checked = true;
+      form.querySelector('input[name="work_intensity"][value="light"]').checked = true;
+      form.querySelector('input[name="clothing"][value="light"]').checked = true;
+      const rec = form.querySelector('input[name="recovery_environment"][value="cool_indoor"]');
+      if (rec) rec.checked = true;
+    } else if (presetKey === 'pune_foundry') {
+      setLocation('Pune', 18.5204, 73.8567, 'Pune, Maharashtra, India', 'Maharashtra');
+      form.querySelector('input[name="age_group"][value="41–60"]').checked = true;
+      form.querySelector('input[name="experience"][value="very_used"]').checked = true;
+      form.querySelector('input[name="work_intensity"][value="very_heavy"]').checked = true;
+      form.querySelector('input[name="clothing"][value="ppe"]').checked = true;
+      const rec = form.querySelector('input[name="recovery_environment"][value="warm_indoor"]');
+      if (rec) rec.checked = true;
+    }
+
+    // Trigger visual card updates
+    setupOptionCards('age-group-options', 'age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all text-center', 'age-card relative flex flex-col items-center justify-center p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all text-center');
+    setupOptionCards('experience-options', 'exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all', 'exp-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all');
+    setupOptionCards('workload-options', 'work-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all', 'work-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all');
+    setupOptionCards('clothing-options', 'cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all', 'cloth-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all');
+    setupOptionCards('recovery-options', 'rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-[#a43700] bg-[#fff5f0] ring-1 ring-[#a43700] cursor-pointer transition-all', 'rec-card flex items-start space-x-3 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-[#a43700]/50 hover:bg-[#fffcf9] transition-all');
+
+    // Auto submit form
+    form.dispatchEvent(new Event('submit'));
+  };
+
+  // Check URL query parameters for scenario
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialScenario = urlParams.get('scenario');
+  if (initialScenario) {
+    setTimeout(() => {
+      window.applyScenarioPreset(initialScenario);
+    }, 100);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Sticky Assessment Panel Offset Calculation (Desktop lg: breakpoint)
+  // ──────────────────────────────────────────────────────────────────────────
+  function updateStickyFormOffset() {
+    if (window.innerWidth < 1024) return;
+    const card = document.getElementById('assessment-form-card');
+    if (!card) return;
+    // When viewport is shorter than card, stick to bottom margin so Submit button & inputs remain accessible
+    const topOffset = Math.min(80, window.innerHeight - card.offsetHeight - 24);
+    card.style.setProperty('--sticky-form-top', topOffset + 'px');
+  }
+
+  window.addEventListener('resize', updateStickyFormOffset);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Page Bootstrapping: Initialize Map & Auto-Assess Default Location
+  // ──────────────────────────────────────────────────────────────────────────
+  let hasBootstrapped = false;
+  function bootstrapPage() {
+    if (hasBootstrapped) return;
+    hasBootstrapped = true;
+    initLocationMap();
+    runAssessment(false);
+
+    const formCardEl = document.getElementById('assessment-form-card');
+    if (formCardEl && window.ResizeObserver) {
+      new ResizeObserver(() => updateStickyFormOffset()).observe(formCardEl);
+    }
+    setTimeout(updateStickyFormOffset, 300);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapPage);
+  } else {
+    bootstrapPage();
+  }
+</script>
+{% endblock %}

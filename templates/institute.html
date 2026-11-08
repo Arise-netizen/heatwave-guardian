@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Institute Dashboard — Workplace Heat-Risk Intelligence{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header Banner -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[#a43700] font-bold mb-1">
+        <span>Occupational Safety</span>
+        <span>•</span>
+        <span>Multi-Site Labor Intelligence</span>
+      </div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Institute Heat-Risk Dashboard</h1>
+      <p class="text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+        Real-time occupational thermal stress surveillance across industrial campuses, infrastructure corridors,
+        factories, and logistics hubs. Evaluates individual site tasks through the HeatWave Guardian engine to enforce
+        mandated ISO 7243 work-rest rotation schedules.
+      </p>
+    </div>
+
+    <!-- Institute Selector Dropdown -->
+    <div class="flex-shrink-0">
+      <label for="institute-select" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+        Select Monitored Enterprise:
+      </label>
+      <select id="institute-select"
+              class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 shadow-sm focus:border-[#a43700] focus:ring-2 focus:ring-[#a43700]/20 outline-none transition-all">
+        {% for inst in institutes %}
+        <option value="{{ inst.id }}">{{ inst.name }} ({{ inst.city }})</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Overall Status Banner -->
+  <div id="inst-overall-banner" class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex items-center space-x-2">
+        <span class="w-3 h-3 rounded-full bg-red-600 animate-ping"></span>
+        <span class="text-xs font-black uppercase tracking-wider text-slate-400">Current Operational Directive</span>
+      </div>
+      <h3 id="inst-overall-title" class="text-lg font-black text-slate-900">
+        Loading Institute Risk Assessment...
+      </h3>
+      <p id="inst-supervisor-line" class="text-xs text-slate-500">
+        Designated Safety Officer: Evaluating shift safety...
+      </p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button type="button" id="refresh-inst-btn"
+              class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <span>Refresh Live Readings</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Key Metrics Aggregation Row -->
+  <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs text-center">
+      <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Sites</span>
+      <div id="stat-total-sites" class="font-mono text-3xl font-black text-slate-900 mt-1">--</div>
+      <span class="text-[11px] text-slate-500">Monitored Zones</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs text-center">
+      <span class="text-[10px] uppercase font-bold text-[#6a040f] tracking-wider">Extreme Risk</span>
+      <div id="stat-extreme-sites" class="font-mono text-3xl font-black text-[#6a040f] mt-1">--</div>
+      <span class="text-[11px] text-red-600 font-semibold">Immediate Stop</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs text-center">
+      <span class="text-[10px] uppercase font-bold text-[#e8590c] tracking-wider">High Risk</span>
+      <div id="stat-high-sites" class="font-mono text-3xl font-black text-[#e8590c] mt-1">--</div>
+      <span class="text-[11px] text-orange-600 font-semibold">30m/30m Rotations</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs text-center">
+      <span class="text-[10px] uppercase font-bold text-[#f2a900] tracking-wider">Moderate Risk</span>
+      <div id="stat-mod-sites" class="font-mono text-3xl font-black text-[#c48300] mt-1">--</div>
+      <span class="text-[11px] text-amber-600">Hydration Watch</span>
+    </div>
+
+    <div class="card p-5 bg-white border border-slate-200 shadow-xs text-center col-span-2 sm:col-span-1">
+      <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Workforce Size</span>
+      <div id="stat-total-workers" class="font-mono text-3xl font-black text-slate-900 mt-1">--</div>
+      <span class="text-[11px] text-slate-500">Active Laborers</span>
+    </div>
+  </div>
+
+  <!-- Monitored Sites Table -->
+  <div class="card bg-white border border-slate-200 shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h3 class="text-base font-extrabold text-slate-900">Workplace Micro-Sites & Operations Table</h3>
+        <p class="text-xs text-slate-500">Live environmental thermal load fused with site physical exertion and protective gear</p>
+      </div>
+      <div class="flex items-center space-x-2 text-xs">
+        <span class="font-bold text-slate-500">Current Ambient:</span>
+        <span id="inst-ambient-temp" class="font-mono font-bold text-slate-900">-- °C</span>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+            <th class="py-3 px-4">Site Zone & Task</th>
+            <th class="py-3 px-4">Workers</th>
+            <th class="py-3 px-4">Workload / Gear</th>
+            <th class="py-3 px-4">Thermal Stress (WBGT)</th>
+            <th class="py-3 px-4">IMD Status</th>
+            <th class="py-3 px-4">Workforce Risk</th>
+            <th class="py-3 px-4">Hourly Schedule</th>
+            <th class="py-3 px-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="inst-sites-tbody" class="divide-y divide-slate-100">
+          <!-- Injected via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Shift Safety Protocol Checklist Card -->
+  <div class="card p-6 bg-white border border-slate-200 shadow-sm space-y-4">
+    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">
+      Mandatory Shift Supervisor Protocol Checklist (Factories & Construction Corridors)
+    </h4>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-700">
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+        <span class="font-bold text-slate-900 block">1. Potable Drinking Points</span>
+        <p class="text-slate-600">Ensure continuous, readily accessible supply of clean potable drinking water and oral rehydration salt packets located within 50 meters of the active workface, encouraging regular drinking.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+        <span class="font-bold text-slate-900 block">2. Active Shaded Enclosures</span>
+        <p class="text-slate-600">Provide well-ventilated or misted resting tarpaulins with cross-breeze or evaporative coolers for designated 15–45 min hourly cool-down rotations.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+        <span class="font-bold text-slate-900 block">3. First-Aid & Emergency Evacuation</span>
+        <p class="text-slate-600">Maintain trained occupational first-aiders equipped with thermal thermometers, ice towels, and a dedicated vehicle on-site for immediate hospital transfer.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Site Detail Modal -->
+<div id="site-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Site Risk Deep-Dive</span>
+        <h3 id="modal-site-title" class="text-lg font-bold text-slate-900">Site Name</h3>
+      </div>
+      <button type="button" onclick="closeSiteModal()" class="text-slate-400 hover:text-slate-700 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 text-center">
+      <div class="p-3 rounded-xl bg-[#fff5f0] border border-[#f0ded6]">
+        <span class="text-[10px] uppercase font-bold text-[#a43700] block">Thermal Stress (WBGT)</span>
+        <span id="modal-site-wbgt" class="font-mono font-bold text-lg text-[#a43700]">-- °C</span>
+        <span id="modal-site-ts-level" class="text-[10px] font-bold text-slate-600 block">Level: --</span>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <span class="text-[10px] uppercase font-bold text-slate-400 block">Workforce Risk</span>
+        <span id="modal-site-risk" class="font-black text-lg">--</span>
+        <span id="modal-site-vuln-level" class="text-[10px] text-slate-500 block">Vuln: --</span>
+      </div>
+    </div>
+
+    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs text-slate-700">
+      <div class="flex justify-between">
+        <span class="text-slate-500">Task Demands:</span>
+        <span id="modal-site-task" class="font-semibold text-slate-900">--</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">Clothing / PPE:</span>
+        <span id="modal-site-clothing" class="font-semibold text-slate-900">--</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">Environmental Base Risk:</span>
+        <span id="modal-site-baserisk" class="font-semibold text-slate-900">--</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">IMD Alert Status:</span>
+        <span id="modal-site-imd" class="font-semibold text-slate-900">--</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">Hourly Work / Rest (ISO 7243):</span>
+        <span id="modal-site-workrest" class="font-mono font-bold text-slate-900">--</span>
+      </div>
+    </div>
+
+    <div class="p-3.5 rounded-xl bg-[#fff9f6] border border-[#f0ded6] text-xs leading-relaxed text-slate-700">
+      <strong class="font-bold text-slate-900 block mb-1">Pipeline Transparent Explanation:</strong>
+      <span id="modal-site-summary">--</span>
+    </div>
+
+    <div class="pt-2 flex justify-end">
+      <button type="button" onclick="closeSiteModal()"
+              class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentInstituteData = null;
+  const instSelect = document.getElementById('institute-select');
+  const refreshBtn = document.getElementById('refresh-inst-btn');
+  const tbody = document.getElementById('inst-sites-tbody');
+
+  async function loadInstituteData() {
+    const instId = instSelect.value;
+    try {
+      const resp = await fetch(`/api/institute/sites?institute_id=${encodeURIComponent(instId)}`);
+      const data = await resp.json();
+      if (!resp.ok) {
+        const errMsg = data.error || 'Failed to fetch institute data.';
+        if (typeof window.showToast === 'function') {
+          window.showToast(errMsg, 'error', () => loadInstituteData());
+        }
+        return;
+      }
+      currentInstituteData = data;
+      renderInstituteDashboard(data);
+    } catch (err) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('Institute monitoring service temporarily unavailable.', 'error', () => loadInstituteData());
+      }
+    }
+  }
+
+  const badgeClassMap = {
+    'Low': 'badge-low',
+    'Moderate': 'badge-moderate',
+    'High': 'badge-high',
+    'Very High': 'badge-very-high',
+    'Extreme': 'badge-extreme'
+  };
+
+  function renderInstituteDashboard(data) {
+    const inst = data.institute;
+    const counts = data.counts;
+
+    document.getElementById('inst-overall-title').textContent = data.overall_status;
+    document.getElementById('inst-overall-title').style.color = data.overall_color;
+    document.getElementById('inst-supervisor-line').textContent = 
+      `Supervising Lead: ${inst.supervisor} | Operations: ${inst.type}`;
+
+    document.getElementById('stat-total-sites').textContent = counts.total;
+    document.getElementById('stat-extreme-sites').textContent = counts.extreme;
+    document.getElementById('stat-high-sites').textContent = counts.high;
+    document.getElementById('stat-mod-sites').textContent = counts.moderate;
+    document.getElementById('stat-total-workers').textContent = counts.total_workers;
+
+    document.getElementById('inst-ambient-temp').textContent = `${data.weather.temp_c.toFixed(1)} °C`;
+
+    tbody.innerHTML = data.sites.map((s, idx) => {
+      const badgeClass = badgeClassMap[s.risk_category] || 'badge-low';
+      const tsLevel = s.thermal_stress_level || (s.thermal_stress && s.thermal_stress.thermal_stress_level) || s.wbgt_band;
+      const tsBadgeClass = badgeClassMap[tsLevel] || 'badge-low';
+
+      return `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="py-3 px-4">
+            <div class="font-extrabold text-slate-900">${s.site_name}</div>
+            <div class="text-[11px] text-slate-500">${s.zone_type}</div>
+          </td>
+          <td class="py-3 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
+            ${s.worker_count}
+          </td>
+          <td class="py-3 px-4 text-xs whitespace-nowrap">
+            <div class="capitalize font-semibold text-slate-800">${s.work_intensity} work</div>
+            <div class="text-slate-500 text-[11px] uppercase">${s.clothing} gear</div>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap">
+            <div class="font-mono font-black text-[#a43700]">${s.wbgt_c.toFixed(1)} °C</div>
+            <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-black uppercase ${tsBadgeClass}">
+              ${tsLevel}
+            </span>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap text-xs font-semibold text-slate-700">
+            ${s.imd_status}
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${badgeClass}">
+              ${s.risk_category}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-mono text-xs font-bold text-slate-900 whitespace-nowrap">
+            ${s.work_minutes}m w / ${s.rest_minutes}m r
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap">
+            <button type="button" onclick="openSiteModal(${idx})"
+                    class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#fff5f0] text-slate-700 hover:text-[#a43700] border border-slate-200 text-xs font-bold transition-colors">
+              Inspect
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openSiteModal(index) {
+    if (!currentInstituteData || !currentInstituteData.sites[index]) return;
+    const s = currentInstituteData.sites[index];
+
+    const tsLevel = s.thermal_stress_level || (s.thermal_stress && s.thermal_stress.thermal_stress_level) || s.wbgt_band;
+
+    document.getElementById('modal-site-title').textContent = s.site_name;
+    const riskElem = document.getElementById('modal-site-risk');
+    riskElem.textContent = `${s.risk_category} RISK`;
+    riskElem.style.color = s.risk_color;
+
+    const vulnElem = document.getElementById('modal-site-vuln-level');
+    if (vulnElem) vulnElem.textContent = `Vuln: ${s.vulnerability || 'Moderate'}`;
+
+    document.getElementById('modal-site-wbgt').textContent = `${s.wbgt_c.toFixed(1)} °C`;
+    const tsLevelElem = document.getElementById('modal-site-ts-level');
+    if (tsLevelElem) tsLevelElem.textContent = `Thermal Stress: ${tsLevel} (${s.wbgt_band})`;
+
+    document.getElementById('modal-site-task').textContent = `${s.work_intensity.toUpperCase()} intensity`;
+    document.getElementById('modal-site-clothing').textContent = s.clothing.toUpperCase();
+    document.getElementById('modal-site-baserisk').textContent = s.base_risk;
+    document.getElementById('modal-site-imd').textContent = s.imd_status;
+    document.getElementById('modal-site-workrest').textContent = `${s.work_minutes}m work / ${s.rest_minutes}m rest`;
+    document.getElementById('modal-site-summary').textContent = s.summary;
+
+    document.getElementById('site-modal').classList.remove('hidden');
+  }
+
+  function closeSiteModal() {
+    document.getElementById('site-modal').classList.add('hidden');
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const instParam = urlParams.get('institute_id') || urlParams.get('institute') || urlParams.get('id');
+  if (instParam && instSelect) {
+    for (let i = 0; i < instSelect.options.length; i++) {
+      if (instSelect.options[i].value.toLowerCase() === instParam.toLowerCase() || instSelect.options[i].text.toLowerCase().includes(instParam.toLowerCase())) {
+        instSelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  instSelect.addEventListener('change', loadInstituteData);
+  refreshBtn.addEventListener('click', loadInstituteData);
+
+  // Initial load
+  loadInstituteData();
+</script>
+{% endblock %}
